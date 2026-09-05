@@ -30,7 +30,7 @@ if not check_password():
 # ==========================================
 st.title("Panel de Control: Rendimiento y Bienestar - Pumas CU")
 
-# 1. Base de datos con Historial y Promedios Reales
+# 1. Base de datos inicial
 if 'df' not in st.session_state:
     datos_iniciales = {
         'Jersey': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 73, 87],
@@ -46,11 +46,11 @@ if 'df' not in st.session_state:
         
         'Estatus_Medico': ['Activo', 'Activo', 'Precaución Médica', 'Activo', 'Activo', 'Activo', 'Activo', 'Activo', 'Activo', 'Activo', 'Activo', 'Activo', 'Activo', 'Activo', 'Activo'],
         
-        # Contadores de eventos (Iniciados en 1 para evitar divisiones por cero iniciales)
+        # Contadores de eventos
         'Partidos_Jugados': [1]*15,
         'Entrenamientos_Asistidos': [1]*15,
         
-        # Métricas Acumuladas de Partidos
+        # Métricas de Partido
         'Yardas_Partidos': [0]*15,
         'Tackleadas_Partidos': [0]*15,
         'Intercepciones_Partidos': [0]*15,
@@ -60,7 +60,7 @@ if 'df' not in st.session_state:
         'Goles_Campo_Partidos': [0]*15,
         'Puntos_Extra_Partidos': [0]*15,
         
-        # Métricas Acumuladas de Entrenamientos
+        # Métricas de Entrenamiento
         'Yardas_Entrenamientos': [0]*15,
         'Tackleadas_Entrenamientos': [0]*15,
         'Intercepciones_Entrenamientos': [0]*15,
@@ -170,32 +170,39 @@ with tab4:
             
             st.success(f"✅ ¡Registro guardado para {jugador_seleccionado}!")
 
-# --- PESTAÑA 3: RENDIMIENTO DEL EQUIPO Y REPORTES ---
+# --- PESTAÑA 3: RENDIMIENTO DEL EQUIPO (ACTUALIZADO) ---
 with tab3:
-    st.header("Análisis General y Reportes Ejecutivos")
+    st.header("📈 Rendimiento General por Unidades y Bienestar Colectivo")
     df_global = st.session_state.df.copy()
     
     col_of, col_def, col_st = st.columns(3)
+    
     with col_of:
         st.subheader("🏈 Ofensiva")
         of_df = df_global[df_global['Unidad'] == 'Ofensiva']
-        st.metric("Yardas Partidos", int(of_df['Yardas_Partidos'].sum()))
+        st.metric("Yardas Totales (Partidos)", int(of_df['Yardas_Partidos'].sum()))
         st.metric("Promedio Carga Mental", f"{of_df['Carga_Mental_Actual'].mean():.1f}/10")
+        st.metric("Fatiga Física Promedio", f"{of_df['Fatiga_Actual'].mean():.1f}/10")
         
     with col_def:
         st.subheader("🛡️ Defensiva")
         def_df = df_global[df_global['Unidad'] == 'Defensiva']
-        st.metric("Tackleadas Partidos", int(def_df['Tackleadas_Partidos'].sum()))
+        st.metric("Tackleadas Totales (Partidos)", int(def_df['Tackleadas_Partidos'].sum()))
+        st.metric("Promedio Sacks (Partidos)", f"{def_df['Sacks_QB_Partidos'].sum() / max(def_df['Partidos_Jugados'].sum(), 1):.2f}")
         st.metric("Promedio Carga Mental", f"{def_df['Carga_Mental_Actual'].mean():.1f}/10")
+        st.metric("Fatiga Física Promedio", f"{def_df['Fatiga_Actual'].mean():.1f}/10")
         
     with col_st:
         st.subheader("🦵 Equipos Especiales")
         st_df = df_global[df_global['Unidad'] == 'Equipos Especiales']
-        st.metric("Puntos Partidos", int((st_df['Goles_Campo_Partidos'].sum() * 3) + (st_df['Puntos_Extra_Partidos'].sum() * 1)))
+        st.metric("Puntos Totales (Partidos)", int((st_df['Goles_Campo_Partidos'].sum() * 3) + (st_df['Puntos_Extra_Partidos'].sum() * 1)))
         st.metric("Promedio Carga Mental", f"{st_df['Carga_Mental_Actual'].mean():.1f}/10")
+        st.metric("Fatiga Física Promedio", f"{st_df['Fatiga_Actual'].mean():.1f}/10")
 
     st.divider()
     st.subheader("📥 Exportar Reporte Semanal para Head Coach")
+    st.write("Descarga la base de datos completa con los estatus médicos y métricas de bienestar actualizadas para compartir por WhatsApp o correo.")
+    
     csv_data = df_global.to_csv(index=False).encode('utf-8')
     st.download_button(
         label="📥 Descargar Reporte en CSV",
@@ -212,11 +219,9 @@ with tab2:
         st.session_state.df = df_editado
         st.success("¡Base de datos actualizada correctamente!")
 
-# --- PESTAÑA 1: ANÁLISIS INDIVIDUAL CON PROMEDIOS REALES ---
+# --- PESTAÑA 1: ANÁLISIS INDIVIDUAL ---
 with tab1:
     df = st.session_state.df.copy()
-    
-    # Denominadores seguros para promedios
     df['PJ_Calc'] = df['Partidos_Jugados'].replace(0, 1)
     df['PE_Calc'] = df['Entrenamientos_Asistidos'].replace(0, 1)
 
@@ -275,11 +280,11 @@ with tab1:
                 
                 elif pos in ['DL', 'LB']:
                     with col1: st.metric("Promedio Tackleadas / Partido", f"{stats_jugador['Tackleadas_Partidos'] / pj:.1f}")
-                    with col2: st.metric("Promedio Tackleadas / Entreno", f"{stats_jugador['Tackleadas_Entrenamientos'] / pe:.1f}")
+                    with col2: st.metric("Promedio Sacks / Partido", f"{stats_jugador['Sacks_QB_Partidos'] / pj:.2f}")
                     with col3: st.metric("Total Sacks (Partidos)", int(stats_jugador['Sacks_QB_Partidos']))
                 
                 elif pos == 'DB':
-                    with col1: st.metric("Promedio Intercepciones / Partido", f"{stats_jugador['Intercepciones_Partidos'] / pj:.1f}")
+                    with col1: st.metric("Promedio Intercepciones / Partido", f"{stats_jugador['Intercepciones_Partidos'] / pj:.2f}")
                     with col2: st.metric("Promedio Tackleadas / Partido", f"{stats_jugador['Tackleadas_Partidos'] / pj:.1f}")
                     with col3: st.metric("Total Intercepciones", int(stats_jugador['Intercepciones_Partidos']))
                 
