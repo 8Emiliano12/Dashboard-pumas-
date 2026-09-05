@@ -22,9 +22,9 @@ if 'df' not in st.session_state:
         'Yardas_Totales': [0]*14,
         'Tackleadas': [0]*14,
         'Intercepciones': [0]*14,
-        'Bloqueos_Efectivos': [0]*14,   # Exclusivo OL (Pancakes)
-        'Capturas_Permitidas': [0]*14,  # Exclusivo OL (Sacks permitidos)
-        'Capturas_QB': [0]*14,          # Exclusivo Front 7 (Sacks generados)
+        'Bloqueos_Efectivos': [0]*14,
+        'Capturas_Permitidas': [0]*14,
+        'Capturas_QB': [0]*14,
         'Carga_Mental_Semanal': [0]*14,
         'Calidad_Sueno': [0]*14,
         'Fatiga_Traslado': [0]*14
@@ -34,36 +34,32 @@ if 'df' not in st.session_state:
 # 2. Pestañas de Navegación
 tab1, tab2, tab3, tab4 = st.tabs(["📊 Análisis Individual", "⚙️ Base de Datos", "📈 Rendimiento Equipo", "📝 Registro Diario"])
 
-# --- PESTAÑA 4: REGISTRO DIARIO (DINÁMICO) ---
+# --- PESTAÑA 4: REGISTRO DIARIO (CORREGIDO) ---
 with tab4:
     st.header("Captura de Entrenamientos y Partidos")
+    
+    # ¡LA CLAVE! El selector debe estar FUERA del formulario para que actualice en tiempo real
+    jugador_seleccionado = st.selectbox("Selecciona al Jugador a evaluar", st.session_state.df['Jugador'].tolist())
+    idx = st.session_state.df.index[st.session_state.df['Jugador'] == jugador_seleccionado].tolist()[0]
+    pos_actual = st.session_state.df.at[idx, 'Posición']
     
     with st.form("registro_diario_form"):
         col_a, col_b = st.columns(2)
         
         with col_a:
-            st.subheader("1. Selección")
-            jugador_seleccionado = st.selectbox("Selecciona al Jugador", st.session_state.df['Jugador'].tolist())
-            
-            # Detectar posición en tiempo real
-            idx = st.session_state.df.index[st.session_state.df['Jugador'] == jugador_seleccionado].tolist()[0]
-            pos_actual = st.session_state.df.at[idx, 'Posición']
-            
-            st.subheader("2. Bienestar de Hoy")
+            st.subheader("1. Bienestar de Hoy")
             carga_nueva = st.slider("Carga Mental/Académica (1-10)", 1, 10, 5)
             sueno_nuevo = st.slider("Horas de Sueño", 1, 12, 7)
             fatiga_nueva = st.slider("Nivel de Fatiga Física (1-10)", 1, 10, 5)
 
         with col_b:
-            st.subheader("3. Rendimiento en Campo")
+            st.subheader("2. Rendimiento en Campo")
             st.write(f"*(Campos adaptados para la posición: **{pos_actual}**)*")
             
-            # Inicializar en 0 para que no sumen nada si no se muestran
             n_intentos, n_completos, n_yardas = 0, 0, 0
             n_tackleadas, n_intercepciones, n_capturas_qb = 0, 0, 0
             n_bloqueos, n_capturas_perm = 0, 0
             
-            # Lógica condicional por posición
             if pos_actual in ['QB', 'WR', 'RB']:
                 n_intentos = st.number_input("Targets/Intentos de Pase", min_value=0, value=0)
                 n_completos = st.number_input("Pases Completos/Recepciones", min_value=0, value=0)
@@ -81,7 +77,6 @@ with tab4:
         submitted = st.form_submit_button("Guardar Registro del Día")
         
         if submitted:
-            # Sumar estadísticas de campo
             st.session_state.df.at[idx, 'Targets_Intentos'] += n_intentos
             st.session_state.df.at[idx, 'Completos_Recepciones'] += n_completos
             st.session_state.df.at[idx, 'Yardas_Totales'] += n_yardas
@@ -91,7 +86,6 @@ with tab4:
             st.session_state.df.at[idx, 'Bloqueos_Efectivos'] += n_bloqueos
             st.session_state.df.at[idx, 'Capturas_Permitidas'] += n_capturas_perm
             
-            # Sobrescribir datos psicológicos
             st.session_state.df.at[idx, 'Carga_Mental_Semanal'] = carga_nueva
             st.session_state.df.at[idx, 'Calidad_Sueno'] = sueno_nuevo
             st.session_state.df.at[idx, 'Fatiga_Traslado'] = fatiga_nueva
@@ -152,7 +146,6 @@ with tab1:
                 st.subheader("Métricas Deportivas")
                 col1, col2, col3 = st.columns(3)
                 
-                # Despliegue de métricas condicionado a la posición
                 if pos in ['QB', 'WR', 'RB']:
                     with col1: st.metric(label="Efectividad", value=f"{stats_jugador['Efectividad (%)']:.1f}%")
                     with col2: st.metric(label="Yardas Reales", value=int(stats_jugador['Yardas_Totales']))
