@@ -88,12 +88,12 @@ if 'df' not in st.session_state:
     }
     st.session_state.df = pd.DataFrame(datos_iniciales)
 
-tab1, tab2, tab3, tab4, tab5 = st.tabs(["📊 Análisis Individual", "⚙️ Base de Datos", "📈 Rendimiento Equipo", "📝 Registro Diario", "📅 Calendario y Planificación"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["📊 Análisis Individual", "⚙️ Base de Datos", "📈 Rendimiento Equipo (Box Score)", "📝 Registro Diario", "📅 Calendario y Planificación"])
 
 # --- PESTAÑA 2: BASE DE DATOS Y GESTIÓN DE ROSTER ---
 with tab2:
-    st.header("⚙️ Gestión del Roster y Base de Datos")
-    st.write("Administra el alta/baja de jugadores y consulta los datos segmentados por área.")
+    st.header("⚙️ Gestión del Roster y Base de Datos Analítica")
+    st.write("Consulta y administra el roster integrando métricas consolidadas de PPG y AVG.")
 
     with st.expander("👤 Administrar Roster (Alta / Baja de Jugadores)", expanded=False):
         col_alta, col_baja = st.columns(2)
@@ -168,9 +168,9 @@ with tab2:
 
     sub_psi, sub_of, sub_def, sub_st = st.tabs([
         "🧠 Psicodeportivo y Bienestar", 
-        "🏈 Unidad Ofensiva", 
-        "🛡️ Unidad Defensiva", 
-        "🦵 Equipos Especiales"
+        "🏈 Unidad Ofensiva (PPG & AVG)", 
+        "🛡️ Unidad Defensiva (PPG & AVG)", 
+        "🦵 Equipos Especiales (PPG)"
     ])
 
     with sub_psi:
@@ -186,41 +186,50 @@ with tab2:
             st.success("¡Datos psicodeportivos actualizados correctamente!")
 
     with sub_of:
-        st.subheader("Rendimiento Técnico: Unidad Ofensiva")
-        cols_of = [
-            'Jersey', 'Jugador', 'Posición', 'Partidos_Convocados',
-            'Yardas_Producidas_Partidos', 'Pases_Intentados_Partidos', 'Pases_Completados_Partidos',
+        st.subheader("Rendimiento Ofensivo con Métricas Calculadas")
+        df_of = st.session_state.df[st.session_state.df['Unidad'] == 'Ofensiva'].copy()
+        pj_safe = df_of['Partidos_Convocados'].replace(0, 1)
+        
+        df_of['PPG_Yardas'] = (df_of['Yardas_Producidas_Partidos'] / pj_safe).round(1)
+        df_of['AVG_Pases_Comp_%'] = ((df_of['Pases_Completados_Partidos'] / df_of['Pases_Intentados_Partidos'].replace(0, 1)) * 100).round(1)
+        
+        cols_of_view = [
+            'Jersey', 'Jugador', 'Posición', 'Partidos_Convocados', 
+            'Yardas_Producidas_Partidos', 'PPG_Yardas', 
+            'Pases_Intentados_Partidos', 'Pases_Completados_Partidos', 'AVG_Pases_Comp_%',
             'Bloqueos_Dominio_Partidos', 'Capturas_Permitidas_Partidos'
         ]
-        indices_of = st.session_state.df[st.session_state.df['Unidad'] == 'Ofensiva'].index
-        df_of_edit = st.data_editor(st.session_state.df.loc[indices_of, cols_of], use_container_width=True, hide_index=True, key="editor_of")
-        if st.button("Guardar Cambios Ofensiva"):
-            st.session_state.df.update(df_of_edit)
-            st.success("¡Estadísticas ofensivas actualizadas correctamente!")
+        st.dataframe(df_of_view, use_container_width=True, hide_index=True)
 
     with sub_def:
-        st.subheader("Rendimiento Técnico: Unidad Defensiva")
-        cols_def = [
+        st.subheader("Rendimiento Defensivo con Métricas Calculadas")
+        df_def = st.session_state.df[st.session_state.df['Unidad'] == 'Defensiva'].copy()
+        pj_safe_def = df_def['Partidos_Convocados'].replace(0, 1)
+        
+        df_def['PPG_Tackleadas'] = (df_def['Tackleadas_Efectivas_Partidos'] / pj_safe_def).round(1)
+        df_def['PPG_Sacks'] = (df_def['Capturas_QB_Sacks_Partidos'] / pj_safe_def).round(2)
+        
+        cols_def_view = [
             'Jersey', 'Jugador', 'Posición', 'Partidos_Convocados',
-            'Tackleadas_Efectivas_Partidos', 'Intercepciones_Partidos', 'Capturas_QB_Sacks_Partidos'
+            'Tackleadas_Efectivas_Partidos', 'PPG_Tackleadas',
+            'Intercepciones_Partidos',
+            'Capturas_QB_Sacks_Partidos', 'PPG_Sacks'
         ]
-        indices_def = st.session_state.df[st.session_state.df['Unidad'] == 'Defensiva'].index
-        df_def_edit = st.data_editor(st.session_state.df.loc[indices_def, cols_def], use_container_width=True, hide_index=True, key="editor_def")
-        if st.button("Guardar Cambios Defensiva"):
-            st.session_state.df.update(df_def_edit)
-            st.success("¡Estadísticas defensivas actualizadas correctamente!")
+        st.dataframe(df_def_view, use_container_width=True, hide_index=True)
 
     with sub_st:
-        st.subheader("Rendimiento Técnico: Equipos Especiales")
-        cols_st = [
+        st.subheader("Rendimiento Equipos Especiales con Métricas Calculadas")
+        df_st = st.session_state.df[st.session_state.df['Unidad'] == 'Equipos Especiales'].copy()
+        pj_safe_st = df_st['Partidos_Convocados'].replace(0, 1)
+        
+        df_st['Puntos_Totales'] = (df_st['Goles_Campo_Partidos'] * 3) + df_st['Puntos_Extra_Partidos']
+        df_st['PPG_Puntos'] = (df_st['Puntos_Totales'] / pj_safe_st).round(1)
+        
+        cols_st_view = [
             'Jersey', 'Jugador', 'Posición', 'Partidos_Convocados',
-            'Goles_Campo_Partidos', 'Puntos_Extra_Partidos'
+            'Goles_Campo_Partidos', 'Puntos_Extra_Partidos', 'Puntos_Totales', 'PPG_Puntos'
         ]
-        indices_st = st.session_state.df[st.session_state.df['Unidad'] == 'Equipos Especiales'].index
-        df_st_edit = st.data_editor(st.session_state.df.loc[indices_st, cols_st], use_container_width=True, hide_index=True, key="editor_st")
-        if st.button("Guardar Cambios Equipos Especiales"):
-            st.session_state.df.update(df_st_edit)
-            st.success("¡Estadísticas de equipos especiales actualizadas correctamente!")
+        st.dataframe(df_st_view, use_container_width=True, hide_index=True)
 
 # --- PESTAÑA 4: REGISTRO DIARIO ---
 with tab4:
@@ -413,44 +422,60 @@ with tab5:
     st.dataframe(df_calendario, use_container_width=True, hide_index=True)
     st.info("💡 **Enfoque Psicodeportivo:** Los **Miércoles** medimos sobrecarga física y dolor muscular; los **Viernes** medimos la activación, confianza táctica y descanso previo al juego.")
 
-# --- PESTAÑA 3: RENDIMIENTO DEL EQUIPO Y REPORTES ---
+# --- PESTAÑA 3: RENDIMIENTO DEL EQUIPO (ESTILO BOX SCORE / NCAA) ---
 with tab3:
-    st.header("📈 Rendimiento General y Comparativa de Unidades")
+    st.header("📊 Box Score y Estadísticas por Categoría (Estilo NCAA)")
+    st.write("Consulta el reporte general del equipo desglosado por bloques técnicos y de rendimiento profesional.")
+    
     df_global = st.session_state.df.copy()
     
-    col_of, col_def, col_st = st.columns(3)
-    
-    with col_of:
-        st.subheader("🏈 Ofensiva")
-        of_df = df_global[df_global['Unidad'] == 'Ofensiva']
-        st.metric("Yardas Totales (Partidos)", int(of_df['Yardas_Producidas_Partidos'].sum()))
-        st.metric("Fatiga Entrenos Promedio", f"{of_df['Fatiga_Entreno'].mean():.1f}/10")
-        st.metric("Confianza Táctica Promedio", f"{of_df['Confianza_Tactica'].mean():.1f}/10")
-        
-    with col_def:
-        st.subheader("🛡️ Defensiva")
-        def_df = df_global[df_global['Unidad'] == 'Defensiva']
-        st.metric("Tackleadas Totales", int(def_df['Tackleadas_Efectivas_Partidos'].sum()))
-        total_partidos_convocados = max(int(def_df['Partidos_Convocados'].sum()), 1)
-        st.metric("Promedio Sacks / J", f"{def_df['Capturas_QB_Sacks_Partidos'].sum() / total_partidos_convocados:.2f}")
-        st.metric("Fatiga Entrenos Promedio", f"{def_df['Fatiga_Entreno'].mean():.1f}/10")
-        st.metric("Confianza Táctica Promedio", f"{def_df['Confianza_Tactica'].mean():.1f}/10")
-        
-    with col_st:
-        st.subheader("🦵 Equipos Especiales")
-        st_df = df_global[df_global['Unidad'] == 'Equipos Especiales']
-        st.metric("Puntos Totales", int((st_df['Goles_Campo_Partidos'].sum() * 3) + (st_df['Puntos_Extra_Partidos'].sum() * 1)))
-        st.metric("Fatiga Entrenos Promedio", f"{st_df['Fatiga_Entreno'].mean():.1f}/10")
-        st.metric("Confianza Táctica Promedio", f"{st_df['Confianza_Tactica'].mean():.1f}/10")
+    # --- 1. BLOQUE: RUSHING / PASSING (OFENSIVA) ---
+    st.markdown("### 🏈 OFENSIVA: PASSING & RUSHING")
+    df_of = df_global[df_global['Unidad'] == 'Ofensiva'].copy()
+    if not df_of.empty:
+        df_of['Pases_C_ATT'] = df_of['Pases_Completados_Partidos'].astype(str) + "-" + df_of['Pases_Intentados_Partidos'].astype(str)
+        box_passing = df_of[['Jersey', 'Jugador', 'Posición', 'Pases_C_ATT', 'Yardas_Producidas_Partidos']].rename(columns={
+            'Jersey': 'NO.', 'Jugador': 'JUGADOR', 'Posición': 'POS', 'Pases_C_ATT': 'CP-ATT', 'Yardas_Producidas_Partidos': 'YDS'
+        })
+        st.dataframe(box_passing, use_container_width=True, hide_index=True)
+    else:
+        st.info("No hay registros ofensivos activos.")
+
+    st.markdown("### 🛑 BLOQUEOS Y PROTECCIÓN (OFFENSIVE LINE)")
+    if not df_of.empty:
+        box_blocking = df_of[['Jersey', 'Jugador', 'Posición', 'Bloqueos_Dominio_Partidos', 'Capturas_Permitidas_Partidos']].rename(columns={
+            'Jersey': 'NO.', 'Jugador': 'JUGADOR', 'Posición': 'POS', 'Bloqueos_Dominio_Partidos': 'BLOQUEOS DOMINIO (PANCAKES)', 'Capturas_Permitidas_Partidos': 'SACKS PERMITIDOS'
+        })
+        st.dataframe(box_blocking, use_container_width=True, hide_index=True)
 
     st.divider()
-    st.subheader("📊 Gráfica Comparativa de Fatiga en Entrenamientos por Unidad")
-    df_fatiga_unidad = df_global.groupby('Unidad')['Fatiga_Entreno'].mean().reset_index()
-    st.bar_chart(df_fatiga_unidad.set_index('Unidad'))
+
+    # --- 2. BLOQUE: DEFENSE ---
+    st.markdown("### 🛡️ DEFENSE (FRONT 7 & SECUNDARIA)")
+    df_def = df_global[df_global['Unidad'] == 'Defensiva'].copy()
+    if not df_def.empty:
+        box_defense = df_def[['Jersey', 'Jugador', 'Posición', 'Tackleadas_Efectivas_Partidos', 'Capturas_QB_Sacks_Partidos', 'Intercepciones_Partidos']].rename(columns={
+            'Jersey': 'NO.', 'Jugador': 'JUGADOR', 'Posición': 'POS', 'Tackleadas_Efectivas_Partidos': 'TACKLES', 'Capturas_QB_Sacks_Partidos': 'SACKS', 'Intercepciones_Partidos': 'INT'
+        })
+        st.dataframe(box_defense, use_container_width=True, hide_index=True)
+    else:
+        st.info("No hay registros defensivos activos.")
+
+    st.divider()
+
+    # --- 3. BLOQUE: KICKING / SPECIAL TEAMS ---
+    st.markdown("### 🦵 KICKING & SPECIAL TEAMS")
+    df_st = df_global[df_global['Unidad'] == 'Equipos Especiales'].copy()
+    if not df_st.empty:
+        box_st = df_st[['Jersey', 'Jugador', 'Posición', 'Goles_Campo_Partidos', 'Puntos_Extra_Partidos']].rename(columns={
+            'Jersey': 'NO.', 'Jugador': 'JUGADOR', 'Posición': 'POS', 'Goles_Campo_Partidos': 'GOLES DE CAMPO (FG)', 'Puntos_Extra_Partidos': 'PUNTOS EXTRA (PAT)'
+        })
+        st.dataframe(box_st, use_container_width=True, hide_index=True)
+    else:
+        st.info("No hay registros de equipos especiales activos.")
 
     st.divider()
     st.subheader("📥 Exportar Reportes Especializados para Head Coach")
-    st.write("Descarga bases de datos limpias y segmentadas por área para compartir con los entrenadores de posición.")
     
     col_dl1, col_dl2, col_dl3 = st.columns(3)
     
@@ -465,7 +490,7 @@ with tab3:
         )
         
     with col_dl2:
-        cols_of_exp = ['Jersey', 'Jugador', 'Posición', 'Yardas_Producidas_Partidos', 'Pases_Intentados_Partidos', 'Pases_Completados_Partidos', 'Bloqueos_Dominio_Partidos', 'Capturas_Permitidas_Partidos', 'Yardas_Producidas_Entrenos']
+        cols_of_exp = ['Jersey', 'Jugador', 'Posición', 'Yardas_Producidas_Partidos', 'Pases_Intentados_Partidos', 'Pases_Completados_Partidos', 'Bloqueos_Dominio_Partidos', 'Capturas_Permitidas_Partidos']
         csv_of = df_global[df_global['Unidad'] == 'Ofensiva'][cols_of_exp].to_csv(index=False).encode('utf-8')
         st.download_button(
             label="📥 Reporte Ofensiva",
@@ -546,7 +571,7 @@ with tab1:
                 with col_p2:
                     st.markdown(f"🏟️ **Convocatoria en Partidos:** `{pct_partidos:.1f}%` ({partidos_jugados}/{partidos_tot})")
 
-                st.subheader("📊 Métricas de Rendimiento (AVG & PPG)")
+                st.subheader("📊 Métricas de Rendimiento (PPG & AVG)")
                 col1, col2, col3 = st.columns(3)
                 
                 pj = stats_jugador['PJ_Calc']
