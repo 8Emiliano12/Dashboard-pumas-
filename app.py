@@ -30,7 +30,7 @@ if not check_password():
 # ==========================================
 st.title("Panel de Control: Rendimiento y Bienestar - Pumas CU")
 
-# 1. Base de datos con contadores separados para Entrenamientos y Partidos
+# 1. Base de datos inicial
 if 'df' not in st.session_state:
     datos_iniciales = {
         'Jersey': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 73, 87],
@@ -46,7 +46,7 @@ if 'df' not in st.session_state:
         
         'Estatus_Medico': ['Activo', 'Activo', 'Precaución Médica', 'Activo', 'Activo', 'Activo', 'Activo', 'Activo', 'Activo', 'Activo', 'Activo', 'Activo', 'Activo', 'Activo', 'Activo'],
         
-        # Control de Asistencia Separado (Entrenamientos vs Partidos)
+        # Control de Asistencia Separado
         'Entrenos_Programados': [1]*15,
         'Entrenos_Asistidos': [1]*15,
         'Partidos_Programados': [1]*15,
@@ -81,7 +81,7 @@ if 'df' not in st.session_state:
 
 tab1, tab2, tab3, tab4 = st.tabs(["📊 Análisis Individual", "⚙️ Base de Datos", "📈 Rendimiento Equipo", "📝 Registro Diario"])
 
-# --- PESTAÑA 4: REGISTRO DIARIO ---
+# --- PESTAÑA 4: REGISTRO DIARIO CON SEDE (LOCAL / VISITA) ---
 with tab4:
     st.header("Captura de Entrenamientos y Partidos")
     
@@ -104,7 +104,12 @@ with tab4:
     pos_actual = st.session_state.df.at[idx, 'Posición']
     
     with st.form("registro_diario_form"):
-        st.info(f"Registrando actividad tipo: **{tipo_evento}** para **{jugador_seleccionado}** ({pos_actual})")
+        # Selector condicional de sede si es partido
+        if tipo_evento == "Partido":
+            sede_partido = st.radio("Sede del Encuentro:", ["Local (CU)", "Visita"], horizontal=True)
+            st.info(f"Registrando **Partido de {sede_partido}** para **{jugador_seleccionado}** ({pos_actual})")
+        else:
+            st.info(f"Registrando **Entrenamiento** para **{jugador_seleccionado}** ({pos_actual})")
         
         col_a, col_b = st.columns(2)
         
@@ -145,7 +150,6 @@ with tab4:
         submitted = st.form_submit_button("Guardar Registro")
         
         if submitted:
-            # Actualizar contadores separados de participación
             if tipo_evento == "Entrenamiento":
                 st.session_state.df.at[idx, 'Entrenos_Programados'] += 1
                 if asistencia_opcion == "Asistió":
@@ -246,7 +250,6 @@ with tab2:
 with tab1:
     df = st.session_state.df.copy()
     
-    # Denominadores seguros
     df['PJ_Calc'] = df['Partidos_Convocados'].replace(0, 1)
     df['PE_Calc'] = df['Entrenos_Asistidos'].replace(0, 1)
 
@@ -287,7 +290,6 @@ with tab1:
                     else:
                         st.success("🟢 **ESTATUS: DISPONIBLE / ÓPTIMO**")
 
-                # Cálculo de porcentajes separados
                 entrenos_tot = stats_jugador['Entrenos_Programados']
                 entrenos_asist = stats_jugador['Entrenos_Asistidos']
                 pct_entrenos = (entrenos_asist / entrenos_tot) * 100 if entrenos_tot > 0 else 100.0
@@ -296,7 +298,6 @@ with tab1:
                 partidos_jugados = stats_jugador['Partidos_Convocados']
                 pct_partidos = (partidos_jugados / partidos_tot) * 100 if partidos_tot > 0 else 100.0
 
-                # Despliegue visual en dos columnas para los porcentajes
                 col_p1, col_p2 = st.columns(2)
                 with col_p1:
                     st.markdown(f"🏋️ **Asistencia a Entrenamientos:** `{pct_entrenos:.1f}%` ({entrenos_asist}/{entrenos_tot})")
