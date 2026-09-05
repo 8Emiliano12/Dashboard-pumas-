@@ -30,7 +30,7 @@ if not check_password():
 # ==========================================
 st.title("Panel de Control: Rendimiento y Bienestar - Pumas CU")
 
-# 1. Base de datos con Historiales Detallados y Asistencia
+# 1. Base de datos con contadores de sesiones totales y asistidas para el % de participación
 if 'df' not in st.session_state:
     datos_iniciales = {
         'Jersey': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 73, 87],
@@ -45,9 +45,12 @@ if 'df' not in st.session_state:
         'Unidad': ['Defensiva', 'Ofensiva', 'Defensiva', 'Ofensiva', 'Defensiva', 'Defensiva', 'Defensiva', 'Defensiva', 'Defensiva', 'Defensiva', 'Ofensiva', 'Defensiva', 'Ofensiva', 'Ofensiva', 'Equipos Especiales'],
         
         'Estatus_Medico': ['Activo', 'Activo', 'Precaución Médica', 'Activo', 'Activo', 'Activo', 'Activo', 'Activo', 'Activo', 'Activo', 'Activo', 'Activo', 'Activo', 'Activo', 'Activo'],
-        'Asistencia_Semanal': ['Completa', 'Completa', 'Limitada', 'Completa', 'Completa', 'Completa', 'Completa', 'Completa', 'Completa', 'Completa', 'Completa', 'Completa', 'Completa', 'Completa', 'Completa'],
         
-        # Contadores
+        # Control de Asistencia y Sesiones
+        'Sesiones_Totales': [1]*15,
+        'Sesiones_Asistidas': [1]*15,
+        
+        # Contadores de eventos
         'Partidos_Jugados': [1]*15,
         'Entrenamientos_Asistidos': [1]*15,
         
@@ -73,7 +76,6 @@ if 'df' not in st.session_state:
         'Sueno_Actual': [7]*15,
         'Fatiga_Actual': [4]*15,
         
-        # Historiales para Gráficas de Tendencia (Fatiga y Rendimiento por Juego)
         'Historial_Fatiga': [[4, 5, 4]]*15,
         'Historial_Rendimiento_Juego': [[0]]*15
     }
@@ -81,7 +83,7 @@ if 'df' not in st.session_state:
 
 tab1, tab2, tab3, tab4 = st.tabs(["📊 Análisis Individual", "⚙️ Base de Datos", "📈 Rendimiento Equipo", "📝 Registro Diario"])
 
-# --- PESTAÑA 4: REGISTRO DIARIO AVANZADO ---
+# --- PESTAÑA 4: REGISTRO DIARIO CON ASISTENCIA BINARIA ---
 with tab4:
     st.header("Captura de Entrenamientos y Partidos")
     
@@ -114,7 +116,9 @@ with tab4:
             sueno_nuevo = st.slider("Horas de Sueño", 1, 12, int(st.session_state.df.at[idx, 'Sueno_Actual']))
             fatiga_nueva = st.slider("Nivel de Fatiga Física (1-10)", 1, 10, int(st.session_state.df.at[idx, 'Fatiga_Actual']))
             
-            asistencia_nueva = st.selectbox("Asistencia / Participación Semanal", ["Completa (100%)", "Limitada / Modificada", "Ausente / Descanso"], index=0)
+            # Control de asistencia binario
+            asistencia_opcion = st.selectbox("¿Asistió a la sesión?", ["Asistió", "No Asistió"])
+            
             nuevo_estatus = st.selectbox("Estatus Médico / Disponibilidad", ["Activo", "Precaución Médica", "Lesionado / Inactivo"], index=["Activo", "Precaución Médica", "Lesionado / Inactivo"].index(st.session_state.df.at[idx, 'Estatus_Medico']) if st.session_state.df.at[idx, 'Estatus_Medico'] in ["Activo", "Precaución Médica", "Lesionado / Inactivo"] else 0)
 
         with col_b:
@@ -141,8 +145,12 @@ with tab4:
         submitted = st.form_submit_button("Guardar Registro")
         
         if submitted:
+            # Actualizar contadores de sesiones para el porcentaje de participación
+            st.session_state.df.at[idx, 'Sesiones_Totales'] += 1
+            if asistencia_opcion == "Asistió":
+                st.session_state.df.at[idx, 'Sesiones_Asistidas'] += 1
+
             st.session_state.df.at[idx, 'Estatus_Medico'] = nuevo_estatus
-            st.session_state.df.at[idx, 'Asistencia_Semanal'] = asistencia_nueva
             st.session_state.df.at[idx, 'Carga_Mental_Actual'] = carga_nueva
             st.session_state.df.at[idx, 'Sueno_Actual'] = sueno_nuevo
             st.session_state.df.at[idx, 'Fatiga_Actual'] = fatiga_nueva
@@ -153,7 +161,6 @@ with tab4:
             if len(hist_fatiga) > 5: hist_fatiga.pop(0)
             st.session_state.df.at[idx, 'Historial_Fatiga'] = hist_fatiga
             
-            # Registrar métricas según evento y actualizar historial por juego si es partido
             if tipo_evento == "Partido":
                 st.session_state.df.at[idx, 'Partidos_Jugados'] += 1
                 st.session_state.df.at[idx, 'Yardas_Partidos'] += n_yardas
@@ -165,7 +172,6 @@ with tab4:
                 st.session_state.df.at[idx, 'Goles_Campo_Partidos'] += n_gc
                 st.session_state.df.at[idx, 'Puntos_Extra_Partidos'] += n_pe
                 
-                # Definir valor clave de rendimiento para la gráfica por juego
                 val_juego = n_yardas if pos_actual in ['QB', 'WR', 'RB'] else (n_tackleadas + n_sacks_qb*2 if pos_actual in ['DL', 'LB'] else n_pancakes)
                 hist_rend = st.session_state.df.at[idx, 'Historial_Rendimiento_Juego']
                 hist_rend.append(val_juego)
@@ -182,7 +188,7 @@ with tab4:
             
             st.success(f"✅ ¡Registro guardado para {jugador_seleccionado}!")
 
-# --- PESTAÑA 3: RENDIMIENTO DEL EQUIPO Y GRÁFICAS COMPARATIVAS ---
+# --- PESTAÑA 3: RENDIMIENTO DEL EQUIPO Y GRÁFICAS ---
 with tab3:
     st.header("📈 Rendimiento General y Comparativa de Unidades")
     df_global = st.session_state.df.copy()
@@ -213,7 +219,6 @@ with tab3:
 
     st.divider()
     st.subheader("📊 Gráfica Comparativa de Fatiga por Unidad")
-    # Generar gráfica de barras con el promedio de fatiga por unidad
     df_fatiga_unidad = df_global.groupby('Unidad')['Fatiga_Actual'].mean().reset_index()
     st.bar_chart(df_fatiga_unidad.set_index('Unidad'))
 
@@ -235,7 +240,7 @@ with tab2:
         st.session_state.df = df_editado
         st.success("¡Base de datos actualizada correctamente!")
 
-# --- PESTAÑA 1: ANÁLISIS INDIVIDUAL CON HISTORIAL DE PARTIDOS ---
+# --- PESTAÑA 1: ANÁLISIS INDIVIDUAL CON % DE PARTICIPACIÓN ---
 with tab1:
     df = st.session_state.df.copy()
     df['PJ_Calc'] = df['Partidos_Jugados'].replace(0, 1)
@@ -278,7 +283,12 @@ with tab1:
                     else:
                         st.success("🟢 **ESTATUS: DISPONIBLE / ÓPTIMO**")
 
-                st.markdown(f"**Asistencia / Participación Semanal:** `{stats_jugador['Asistencia_Semanal']}`")
+                # Cálculo del porcentaje de participación
+                sesiones_tot = stats_jugador['Sesiones_Totales']
+                sesiones_asist = stats_jugador['Sesiones_Asistidas']
+                pct_asistencia = (sesiones_asist / sesiones_tot) * 100 if sesiones_tot > 0 else 100.0
+
+                st.markdown(f"**Porcentaje de Participación (Asistencia):** `{pct_asistencia:.1f}%` ({sesiones_asist} de {sesiones_tot} sesiones)")
 
                 st.subheader("📊 Rendimiento Promedio: Partidos vs Entrenamientos")
                 col1, col2, col3 = st.columns(3)
