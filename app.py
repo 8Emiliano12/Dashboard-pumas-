@@ -4,7 +4,7 @@ import pandas as pd
 st.set_page_config(page_title="Dashboard Pumas CU", layout="wide")
 st.title("Panel de Control: Rendimiento y Bienestar - Pumas CU")
 
-# 1. Base de datos con Equipos Especiales integrados
+# 1. Base de datos
 if 'df' not in st.session_state:
     datos_iniciales = {
         'Jersey': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 73, 87],
@@ -35,7 +35,7 @@ if 'df' not in st.session_state:
 
 tab1, tab2, tab3, tab4 = st.tabs(["📊 Análisis Individual", "⚙️ Base de Datos", "📈 Rendimiento Equipo", "📝 Registro Diario"])
 
-# --- PESTAÑA 4: REGISTRO DIARIO ---
+# --- PESTAÑA 4: REGISTRO DIARIO (NOMBRES CON POSICIÓN) ---
 with tab4:
     st.header("Captura de Entrenamientos y Partidos")
     
@@ -45,8 +45,18 @@ with tab4:
     
     jugadores_filtrados = st.session_state.df[st.session_state.df['Unidad'] == unidad_registro]['Jugador'].tolist()
     
+    # Función para formatear visualmente el nombre en el desplegable
+    def mostrar_nombre_con_posicion(nombre_jugador):
+        pos = st.session_state.df[st.session_state.df['Jugador'] == nombre_jugador]['Posición'].values[0]
+        return f"{nombre_jugador} ({pos})"
+    
     with col_filtro2:
-        jugador_seleccionado = st.selectbox("2. Selecciona al Jugador", jugadores_filtrados, key="jugador_reg")
+        jugador_seleccionado = st.selectbox(
+            "2. Selecciona al Jugador", 
+            jugadores_filtrados, 
+            format_func=mostrar_nombre_con_posicion, # Aquí aplicamos el truco visual
+            key="jugador_reg"
+        )
     
     idx = st.session_state.df.index[st.session_state.df['Jugador'] == jugador_seleccionado].tolist()[0]
     pos_actual = st.session_state.df.at[idx, 'Posición']
@@ -148,7 +158,6 @@ with tab1:
 
     st.subheader("Filtros de Búsqueda")
     if not df.empty:
-        # Colocamos los filtros en columnas horizontales en lugar de la barra lateral
         col_f1, col_f2, col_f3 = st.columns(3)
         
         with col_f1:
@@ -200,3 +209,4 @@ with tab1:
                 with col4: st.write(f"**Carga Mental:** {stats_jugador['Carga_Mental_Semanal']}/10")
                 with col5: st.write(f"**Calidad de Sueño:** {stats_jugador['Calidad_Sueno']} horas")
                 with col6: st.write(f"**Fatiga:** {stats_jugador['Fatiga_Traslado']}/10")
+                
