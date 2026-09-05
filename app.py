@@ -30,7 +30,7 @@ if not check_password():
 # ==========================================
 st.title("Panel de Control: Rendimiento y Bienestar - Pumas CU")
 
-# 1. Base de datos inicial
+# 1. Base de datos con Historiales Detallados y Asistencia
 if 'df' not in st.session_state:
     datos_iniciales = {
         'Jersey': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 73, 87],
@@ -45,12 +45,13 @@ if 'df' not in st.session_state:
         'Unidad': ['Defensiva', 'Ofensiva', 'Defensiva', 'Ofensiva', 'Defensiva', 'Defensiva', 'Defensiva', 'Defensiva', 'Defensiva', 'Defensiva', 'Ofensiva', 'Defensiva', 'Ofensiva', 'Ofensiva', 'Equipos Especiales'],
         
         'Estatus_Medico': ['Activo', 'Activo', 'Precaución Médica', 'Activo', 'Activo', 'Activo', 'Activo', 'Activo', 'Activo', 'Activo', 'Activo', 'Activo', 'Activo', 'Activo', 'Activo'],
+        'Asistencia_Semanal': ['Completa', 'Completa', 'Limitada', 'Completa', 'Completa', 'Completa', 'Completa', 'Completa', 'Completa', 'Completa', 'Completa', 'Completa', 'Completa', 'Completa', 'Completa'],
         
-        # Contadores de eventos
+        # Contadores
         'Partidos_Jugados': [1]*15,
         'Entrenamientos_Asistidos': [1]*15,
         
-        # Métricas de Partido
+        # Totales Acumulados
         'Yardas_Partidos': [0]*15,
         'Tackleadas_Partidos': [0]*15,
         'Intercepciones_Partidos': [0]*15,
@@ -60,7 +61,6 @@ if 'df' not in st.session_state:
         'Goles_Campo_Partidos': [0]*15,
         'Puntos_Extra_Partidos': [0]*15,
         
-        # Métricas de Entrenamiento
         'Yardas_Entrenamientos': [0]*15,
         'Tackleadas_Entrenamientos': [0]*15,
         'Intercepciones_Entrenamientos': [0]*15,
@@ -73,14 +73,15 @@ if 'df' not in st.session_state:
         'Sueno_Actual': [7]*15,
         'Fatiga_Actual': [4]*15,
         
+        # Historiales para Gráficas de Tendencia (Fatiga y Rendimiento por Juego)
         'Historial_Fatiga': [[4, 5, 4]]*15,
-        'Historial_Carga': [[5, 6, 5]]*15
+        'Historial_Rendimiento_Juego': [[0]]*15
     }
     st.session_state.df = pd.DataFrame(datos_iniciales)
 
 tab1, tab2, tab3, tab4 = st.tabs(["📊 Análisis Individual", "⚙️ Base de Datos", "📈 Rendimiento Equipo", "📝 Registro Diario"])
 
-# --- PESTAÑA 4: REGISTRO DIARIO ---
+# --- PESTAÑA 4: REGISTRO DIARIO AVANZADO ---
 with tab4:
     st.header("Captura de Entrenamientos y Partidos")
     
@@ -108,11 +109,12 @@ with tab4:
         col_a, col_b = st.columns(2)
         
         with col_a:
-            st.subheader("Estado Psicodeportivo Actual")
+            st.subheader("Estado Psicodeportivo y Asistencia")
             carga_nueva = st.slider("Carga Mental / Estrés (1-10)", 1, 10, int(st.session_state.df.at[idx, 'Carga_Mental_Actual']))
             sueno_nuevo = st.slider("Horas de Sueño", 1, 12, int(st.session_state.df.at[idx, 'Sueno_Actual']))
             fatiga_nueva = st.slider("Nivel de Fatiga Física (1-10)", 1, 10, int(st.session_state.df.at[idx, 'Fatiga_Actual']))
             
+            asistencia_nueva = st.selectbox("Asistencia / Participación Semanal", ["Completa (100%)", "Limitada / Modificada", "Ausente / Descanso"], index=0)
             nuevo_estatus = st.selectbox("Estatus Médico / Disponibilidad", ["Activo", "Precaución Médica", "Lesionado / Inactivo"], index=["Activo", "Precaución Médica", "Lesionado / Inactivo"].index(st.session_state.df.at[idx, 'Estatus_Medico']) if st.session_state.df.at[idx, 'Estatus_Medico'] in ["Activo", "Precaución Médica", "Lesionado / Inactivo"] else 0)
 
         with col_b:
@@ -140,15 +142,18 @@ with tab4:
         
         if submitted:
             st.session_state.df.at[idx, 'Estatus_Medico'] = nuevo_estatus
+            st.session_state.df.at[idx, 'Asistencia_Semanal'] = asistencia_nueva
             st.session_state.df.at[idx, 'Carga_Mental_Actual'] = carga_nueva
             st.session_state.df.at[idx, 'Sueno_Actual'] = sueno_nuevo
             st.session_state.df.at[idx, 'Fatiga_Actual'] = fatiga_nueva
             
+            # Historial Fatiga
             hist_fatiga = st.session_state.df.at[idx, 'Historial_Fatiga']
             hist_fatiga.append(fatiga_nueva)
             if len(hist_fatiga) > 5: hist_fatiga.pop(0)
             st.session_state.df.at[idx, 'Historial_Fatiga'] = hist_fatiga
             
+            # Registrar métricas según evento y actualizar historial por juego si es partido
             if tipo_evento == "Partido":
                 st.session_state.df.at[idx, 'Partidos_Jugados'] += 1
                 st.session_state.df.at[idx, 'Yardas_Partidos'] += n_yardas
@@ -159,6 +164,13 @@ with tab4:
                 st.session_state.df.at[idx, 'Sacks_QB_Partidos'] += n_sacks_qb
                 st.session_state.df.at[idx, 'Goles_Campo_Partidos'] += n_gc
                 st.session_state.df.at[idx, 'Puntos_Extra_Partidos'] += n_pe
+                
+                # Definir valor clave de rendimiento para la gráfica por juego
+                val_juego = n_yardas if pos_actual in ['QB', 'WR', 'RB'] else (n_tackleadas + n_sacks_qb*2 if pos_actual in ['DL', 'LB'] else n_pancakes)
+                hist_rend = st.session_state.df.at[idx, 'Historial_Rendimiento_Juego']
+                hist_rend.append(val_juego)
+                if len(hist_rend) > 5: hist_rend.pop(0)
+                st.session_state.df.at[idx, 'Historial_Rendimiento_Juego'] = hist_rend
             else:
                 st.session_state.df.at[idx, 'Entrenamientos_Asistidos'] += 1
                 st.session_state.df.at[idx, 'Yardas_Entrenamientos'] += n_yardas
@@ -170,9 +182,9 @@ with tab4:
             
             st.success(f"✅ ¡Registro guardado para {jugador_seleccionado}!")
 
-# --- PESTAÑA 3: RENDIMIENTO DEL EQUIPO (ACTUALIZADO) ---
+# --- PESTAÑA 3: RENDIMIENTO DEL EQUIPO Y GRÁFICAS COMPARATIVAS ---
 with tab3:
-    st.header("📈 Rendimiento General por Unidades y Bienestar Colectivo")
+    st.header("📈 Rendimiento General y Comparativa de Unidades")
     df_global = st.session_state.df.copy()
     
     col_of, col_def, col_st = st.columns(3)
@@ -182,27 +194,31 @@ with tab3:
         of_df = df_global[df_global['Unidad'] == 'Ofensiva']
         st.metric("Yardas Totales (Partidos)", int(of_df['Yardas_Partidos'].sum()))
         st.metric("Promedio Carga Mental", f"{of_df['Carga_Mental_Actual'].mean():.1f}/10")
-        st.metric("Fatiga Física Promedio", f"{of_df['Fatiga_Actual'].mean():.1f}/10")
+        st.metric("Fatiga Promedio", f"{of_df['Fatiga_Actual'].mean():.1f}/10")
         
     with col_def:
         st.subheader("🛡️ Defensiva")
         def_df = df_global[df_global['Unidad'] == 'Defensiva']
-        st.metric("Tackleadas Totales (Partidos)", int(def_df['Tackleadas_Partidos'].sum()))
-        st.metric("Promedio Sacks (Partidos)", f"{def_df['Sacks_QB_Partidos'].sum() / max(def_df['Partidos_Jugados'].sum(), 1):.2f}")
+        st.metric("Tackleadas Totales", int(def_df['Tackleadas_Partidos'].sum()))
+        st.metric("Promedio Sacks / J", f"{def_df['Sacks_QB_Partidos'].sum() / max(def_df['Partidos_Jugados'].sum(), 1):.2f}")
         st.metric("Promedio Carga Mental", f"{def_df['Carga_Mental_Actual'].mean():.1f}/10")
-        st.metric("Fatiga Física Promedio", f"{def_df['Fatiga_Actual'].mean():.1f}/10")
+        st.metric("Fatiga Promedio", f"{def_df['Fatiga_Actual'].mean():.1f}/10")
         
     with col_st:
         st.subheader("🦵 Equipos Especiales")
         st_df = df_global[df_global['Unidad'] == 'Equipos Especiales']
-        st.metric("Puntos Totales (Partidos)", int((st_df['Goles_Campo_Partidos'].sum() * 3) + (st_df['Puntos_Extra_Partidos'].sum() * 1)))
+        st.metric("Puntos Totales", int((st_df['Goles_Campo_Partidos'].sum() * 3) + (st_df['Puntos_Extra_Partidos'].sum() * 1)))
         st.metric("Promedio Carga Mental", f"{st_df['Carga_Mental_Actual'].mean():.1f}/10")
-        st.metric("Fatiga Física Promedio", f"{st_df['Fatiga_Actual'].mean():.1f}/10")
+        st.metric("Fatiga Promedio", f"{st_df['Fatiga_Actual'].mean():.1f}/10")
+
+    st.divider()
+    st.subheader("📊 Gráfica Comparativa de Fatiga por Unidad")
+    # Generar gráfica de barras con el promedio de fatiga por unidad
+    df_fatiga_unidad = df_global.groupby('Unidad')['Fatiga_Actual'].mean().reset_index()
+    st.bar_chart(df_fatiga_unidad.set_index('Unidad'))
 
     st.divider()
     st.subheader("📥 Exportar Reporte Semanal para Head Coach")
-    st.write("Descarga la base de datos completa con los estatus médicos y métricas de bienestar actualizadas para compartir por WhatsApp o correo.")
-    
     csv_data = df_global.to_csv(index=False).encode('utf-8')
     st.download_button(
         label="📥 Descargar Reporte en CSV",
@@ -219,7 +235,7 @@ with tab2:
         st.session_state.df = df_editado
         st.success("¡Base de datos actualizada correctamente!")
 
-# --- PESTAÑA 1: ANÁLISIS INDIVIDUAL ---
+# --- PESTAÑA 1: ANÁLISIS INDIVIDUAL CON HISTORIAL DE PARTIDOS ---
 with tab1:
     df = st.session_state.df.copy()
     df['PJ_Calc'] = df['Partidos_Jugados'].replace(0, 1)
@@ -262,6 +278,8 @@ with tab1:
                     else:
                         st.success("🟢 **ESTATUS: DISPONIBLE / ÓPTIMO**")
 
+                st.markdown(f"**Asistencia / Participación Semanal:** `{stats_jugador['Asistencia_Semanal']}`")
+
                 st.subheader("📊 Rendimiento Promedio: Partidos vs Entrenamientos")
                 col1, col2, col3 = st.columns(3)
                 
@@ -295,12 +313,18 @@ with tab1:
 
                 st.divider()
 
-                st.subheader("🧠 Monitoreo Psicodeportivo y Tendencias Históricas")
+                st.subheader("🧠 Monitoreo Psicodeportivo y Gráficas de Evolución")
                 col4, col5, col6 = st.columns(3)
                 with col4: st.metric("Carga Mental Actual", f"{carga}/10")
                 with col5: st.metric("Horas de Sueño", f"{stats_jugador['Sueno_Actual']} hrs")
                 with col6: st.metric("Fatiga Física Actual", f"{fatiga}/10")
 
-                st.write("📈 **Tendencia de Fatiga Reciente (Últimos registros):**")
-                df_tendencia_fatiga = pd.DataFrame({'Fatiga': stats_jugador['Historial_Fatiga']})
-                st.line_chart(df_tendencia_fatiga)
+                col_g1, col_g2 = st.columns(2)
+                with col_g1:
+                    st.write("📈 **Tendencia de Fatiga Reciente:**")
+                    df_tendencia_fatiga = pd.DataFrame({'Fatiga': stats_jugador['Historial_Fatiga']})
+                    st.line_chart(df_tendencia_fatiga)
+                with col_g2:
+                    st.write("🏈 **Evolución de Rendimiento Juego a Juego:**")
+                    df_tendencia_juego = pd.DataFrame({'Impacto': stats_jugador['Historial_Rendimiento_Juego']})
+                    st.line_chart(df_tendencia_juego)
