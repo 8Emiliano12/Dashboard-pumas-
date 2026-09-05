@@ -30,7 +30,7 @@ if not check_password():
 # ==========================================
 st.title("Panel de Control: Rendimiento y Bienestar - Pumas CU")
 
-# 1. Base de datos inicial con separación estricta de variables psicológicas
+# 1. Base de datos inicial
 if 'df' not in st.session_state:
     datos_iniciales = {
         'Jersey': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 73, 87],
@@ -69,12 +69,12 @@ if 'df' not in st.session_state:
         'Sacks_Permitidos_Entrenamientos': [0]*15,
         'Sacks_QB_Entrenamientos': [0]*15,
         
-        # --- BLOQUE 1: MITAD DE SEMANA (ENTRENOS) ---
+        # Bloque Psicológico 1: Mitad de semana
         'Fatiga_Entreno': [4]*15,
         'Dolor_Muscular': [3]*15,
         'Recuperacion_Entreno': [7]*15,
         
-        # --- BLOQUE 2: PRE-PARTIDO (MATCHDAY) ---
+        # Bloque Psicológico 2: Pre-partido
         'Ansiedad_Competitiva': [5]*15,
         'Confianza_Tactica': [8]*15,
         'Sueno_Prepartido': [7]*15,
@@ -85,6 +85,72 @@ if 'df' not in st.session_state:
     st.session_state.df = pd.DataFrame(datos_iniciales)
 
 tab1, tab2, tab3, tab4, tab5 = st.tabs(["📊 Análisis Individual", "⚙️ Base de Datos", "📈 Rendimiento Equipo", "📝 Registro Diario", "📅 Calendario y Planificación"])
+
+# --- PESTAÑA 2: BASE DE DATOS MODULARIZADA POR SUB-PESTAÑAS ---
+with tab2:
+    st.header("⚙️ Gestión y Consulta de la Base de Datos")
+    st.write("Datos organizados por área para facilitar la lectura, consulta y edición rápida.")
+
+    sub_psi, sub_of, sub_def, sub_st = st.tabs([
+        "🧠 Psicodeportivo y Bienestar", 
+        "🏈 Unidad Ofensiva", 
+        "🛡️ Unidad Defensiva", 
+        "🦵 Equipos Especiales"
+    ])
+
+    # 1. Subpestaña Psicológica
+    with sub_psi:
+        st.subheader("Bienestar Psicodeportivo y Disponibilidad Médica")
+        cols_psi = [
+            'Jersey', 'Jugador', 'Posición', 'Unidad', 'Estatus_Medico',
+            'Fatiga_Entreno', 'Dolor_Muscular', 'Recuperacion_Entreno',
+            'Ansiedad_Competitiva', 'Confianza_Tactica', 'Sueno_Prepartido'
+        ]
+        df_psi_edit = st.data_editor(st.session_state.df[cols_psi], use_container_width=True, hide_index=True, key="editor_psi")
+        if st.button("Guardar Cambios Psicodeportivos"):
+            st.session_state.df.update(df_psi_edit)
+            st.success("¡Datos psicodeportivos actualizados correctamente!")
+
+    # 2. Subpestaña Ofensiva
+    with sub_of:
+        st.subheader("Rendimiento: Jugadores Ofensivos")
+        cols_of = [
+            'Jersey', 'Jugador', 'Posición', 'Partidos_Convocados',
+            'Yardas_Partidos', 'Pancakes_Partidos', 'Sacks_Permitidos_Partidos',
+            'Yardas_Entrenamientos', 'Pancakes_Entrenamientos', 'Sacks_Permitidos_Entrenamientos'
+        ]
+        indices_of = st.session_state.df[st.session_state.df['Unidad'] == 'Ofensiva'].index
+        df_of_edit = st.data_editor(st.session_state.df.loc[indices_of, cols_of], use_container_width=True, hide_index=True, key="editor_of")
+        if st.button("Guardar Cambios Ofensiva"):
+            st.session_state.df.update(df_of_edit)
+            st.success("¡Estadísticas ofensivas actualizadas correctamente!")
+
+    # 3. Subpestaña Defensiva
+    with sub_def:
+        st.subheader("Rendimiento: Jugadores Defensivos")
+        cols_def = [
+            'Jersey', 'Jugador', 'Posición', 'Partidos_Convocados',
+            'Tackleadas_Partidos', 'Intercepciones_Partidos', 'Sacks_QB_Partidos',
+            'Tackleadas_Entrenamientos', 'Intercepciones_Entrenamientos', 'Sacks_QB_Entrenamientos'
+        ]
+        indices_def = st.session_state.df[st.session_state.df['Unidad'] == 'Defensiva'].index
+        df_def_edit = st.data_editor(st.session_state.df.loc[indices_def, cols_def], use_container_width=True, hide_index=True, key="editor_def")
+        if st.button("Guardar Cambios Defensiva"):
+            st.session_state.df.update(df_def_edit)
+            st.success("¡Estadísticas defensivas actualizadas correctamente!")
+
+    # 4. Subpestaña Equipos Especiales
+    with sub_st:
+        st.subheader("Rendimiento: Equipos Especiales")
+        cols_st = [
+            'Jersey', 'Jugador', 'Posición', 'Partidos_Convocados',
+            'Goles_Campo_Partidos', 'Puntos_Extra_Partidos'
+        ]
+        indices_st = st.session_state.df[st.session_state.df['Unidad'] == 'Equipos Especiales'].index
+        df_st_edit = st.data_editor(st.session_state.df.loc[indices_st, cols_st], use_container_width=True, hide_index=True, key="editor_st")
+        if st.button("Guardar Cambios Equipos Especiales"):
+            st.session_state.df.update(df_st_edit)
+            st.success("¡Estadísticas de equipos especiales actualizadas correctamente!")
 
 # --- PESTAÑA 4: REGISTRO DIARIO ---
 with tab4:
@@ -178,7 +244,6 @@ with tab4:
     else:
         st.subheader(f"🧠 Monitoreo Psicodeportivo ({jornada_seleccionada}) para: {jugador_seleccionado} ({pos_actual})")
         
-        # Selector tipo selectbox para garantizar que Streamlit actualice la pantalla al instante
         tipo_encuesta = st.selectbox(
             "Selecciona el tipo de evaluación psicológica:", 
             ["Evaluación de Mitad de Semana (Entrenamiento)", "Evaluación Pre-partido (Matchday)"]
@@ -187,16 +252,24 @@ with tab4:
         st.write("---")
         
         with st.form("form_psico"):
+            fatiga_entreno_val = int(st.session_state.df.at[idx, 'Fatiga_Entreno'])
+            dolor_muscular_val = int(st.session_state.df.at[idx, 'Dolor_Muscular'])
+            recuperacion_val = int(st.session_state.df.at[idx, 'Recuperacion_Entreno'])
+            
+            ansiedad_val = int(st.session_state.df.at[idx, 'Ansiedad_Competitiva'])
+            confianza_val = int(st.session_state.df.at[idx, 'Confianza_Tactica'])
+            sueno_pre_val = int(st.session_state.df.at[idx, 'Sueno_Prepartido'])
+
             if tipo_encuesta == "Evaluación de Mitad de Semana (Entrenamiento)":
                 st.markdown("#### 🏋️ Factores de Carga y Fatiga en Entrenamientos")
-                fatiga_entreno_nueva = st.slider("Fatiga Física Acumulada (1-10)", 1, 10, int(st.session_state.df.at[idx, 'Fatiga_Entreno']))
-                dolor_muscular_nuevo = st.slider("Dolor Muscular / Molestias Menores (1-10)", 1, 10, int(st.session_state.df.at[idx, 'Dolor_Muscular']))
-                recuperacion_nueva = st.slider("Nivel de Recuperación / Frescura (1-10)", 1, 10, int(st.session_state.df.at[idx, 'Recuperacion_Entreno']))
+                fatiga_entreno_nueva = st.slider("Fatiga Física Acumulada (1-10)", 1, 10, fatiga_entreno_val)
+                dolor_muscular_nuevo = st.slider("Dolor Muscular / Molestias Menores (1-10)", 1, 10, dolor_muscular_val)
+                recuperacion_nueva = st.slider("Nivel de Recuperación / Frescura (1-10)", 1, 10, recuperacion_val)
             else:
                 st.markdown("#### 🏟️ Factores Psicológicos y de Activación Pre-partido")
-                ansiedad_nueva = st.slider("Nivel de Ansiedad / Activación Competitiva (1-10)", 1, 10, int(st.session_state.df.at[idx, 'Ansiedad_Competitiva']))
-                confianza_nueva = st.slider("Confianza en el Plan de Juego (1-10)", 1, 10, int(st.session_state.df.at[idx, 'Confianza_Tactica']))
-                sueno_previo_nuevo = st.slider("Horas de Sueño Noche Previa (Matchday)", 1, 12, int(st.session_state.df.at[idx, 'Sueno_Prepartido']))
+                ansiedad_nueva = st.slider("Nivel de Ansiedad / Activación Competitiva (1-10)", 1, 10, ansiedad_val)
+                confianza_nueva = st.slider("Confianza en el Plan de Juego (1-10)", 1, 10, confianza_val)
+                sueno_previo_nuevo = st.slider("Horas de Sueño Noche Previa (Matchday)", 1, 12, sueno_pre_val)
             
             asistencia_entreno = st.selectbox("Asistencia a la sesión", ["Asistió", "No Asistió"])
             nuevo_estatus = st.selectbox("Estatus Médico / Disponibilidad", ["Activo", "Precaución Médica", "Lesionado / Inactivo"], index=["Activo", "Precaución Médica", "Lesionado / Inactivo"].index(st.session_state.df.at[idx, 'Estatus_Medico']) if st.session_state.df.at[idx, 'Estatus_Medico'] in ["Activo", "Precaución Médica", "Lesionado / Inactivo"] else 0)
@@ -291,14 +364,6 @@ with tab3:
         file_name='reporte_semanal_pumas_cu.csv',
         mime='text/csv',
     )
-
-# --- PESTAÑA 2: BASE DE DATOS Y EDICIÓN ---
-with tab2:
-    st.subheader("⚙️ Gestión del Roster y Base de Datos")
-    df_editado = st.data_editor(st.session_state.df, num_rows="dynamic", use_container_width=True, hide_index=True)
-    if st.button("Guardar Cambios Globales"):
-        st.session_state.df = df_editado
-        st.success("¡Base de datos actualizada correctamente!")
 
 # --- PESTAÑA 1: ANÁLISIS INDIVIDUAL ---
 with tab1:
