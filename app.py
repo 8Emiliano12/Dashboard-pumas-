@@ -199,7 +199,7 @@ with tab2:
             'Pases_Intentados_Partidos', 'Pases_Completados_Partidos', 'AVG_Pases_Comp_%',
             'Bloqueos_Dominio_Partidos', 'Capturas_Permitidas_Partidos'
         ]
-        st.dataframe(df_of_view, use_container_width=True, hide_index=True)
+        st.dataframe(df_of[cols_of_view], use_container_width=True, hide_index=True)
 
     with sub_def:
         st.subheader("Rendimiento Defensivo con Métricas Calculadas")
@@ -215,7 +215,7 @@ with tab2:
             'Intercepciones_Partidos',
             'Capturas_QB_Sacks_Partidos', 'PPG_Sacks'
         ]
-        st.dataframe(df_def_view, use_container_width=True, hide_index=True)
+        st.dataframe(df_def[cols_def_view], use_container_width=True, hide_index=True)
 
     with sub_st:
         st.subheader("Rendimiento Equipos Especiales con Métricas Calculadas")
@@ -229,7 +229,7 @@ with tab2:
             'Jersey', 'Jugador', 'Posición', 'Partidos_Convocados',
             'Goles_Campo_Partidos', 'Puntos_Extra_Partidos', 'Puntos_Totales', 'PPG_Puntos'
         ]
-        st.dataframe(df_st_view, use_container_width=True, hide_index=True)
+        st.dataframe(df_st[cols_st_view], use_container_width=True, hide_index=True)
 
 # --- PESTAÑA 4: REGISTRO DIARIO ---
 with tab4:
