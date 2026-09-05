@@ -88,7 +88,6 @@ if 'df' not in st.session_state:
     }
     st.session_state.df = pd.DataFrame(datos_iniciales)
 
-# Inicializar estado en sesión para el jugador activo en la mesa
 if 'active_idx' not in st.session_state:
     st.session_state.active_idx = None
 if 'active_jugador_nombre' not in st.session_state:
@@ -96,7 +95,7 @@ if 'active_jugador_nombre' not in st.session_state:
 if 'active_pos' not in st.session_state:
     st.session_state.active_pos = None
 
-# Estructura limpia de 5 pestañas definitivas
+# Pestañas principales
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
     "📊 Análisis Individual", 
     "⚙️ Base de Datos", 
@@ -105,7 +104,7 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs([
     "📅 Calendario"
 ])
 
-# --- PESTAÑA 4: REGISTRO DE DATOS EN VIVO (CON BOTÓN DE CONFIRMACIÓN) ---
+# --- PESTAÑA 4: REGISTRO DE DATOS EN VIVO ---
 with tab4:
     st.header("Registro de Datos y Mesa Táctil en Vivo")
     st.write("Selecciona la actividad, el jugador y presiona el botón de confirmación para habilitar los botones de registro.")
@@ -207,7 +206,6 @@ with tab4:
                 st.session_state.active_pos = pos_exprs
                 st.success(f"Perfil provisional creado y confirmado para Jersey #{jersey_exprs} ({pos_exprs}).")
 
-    # Si ya hay un jugador confirmado, mostrar los botones de acción
     if st.session_state.active_idx is not None and st.session_state.active_jugador_nombre is not None:
         idx_live = st.session_state.active_idx
         jugador_live = st.session_state.active_jugador_nombre
@@ -310,12 +308,12 @@ with tab4:
                     st.session_state.df.at[idx_live, 'Historial_Fatiga'] = hist_f
                     st.success(f"Datos de entrenamiento guardados para {jugador_live}.")
 
-# --- PESTAÑA 2: BASE DE DATOS Y GESTIÓN DE ROSTER ---
+# --- PESTAÑA 2: BASE DE DATOS Y GESTIÓN DE ROSTER (AHORA COMPLETAMENTE EDITABLE) ---
 with tab2:
     st.header("Gestión del Roster y Base de Datos Analítica")
-    st.write("Consulta y administra el roster. Aquí puedes renombrar a los jugadores provisionales creados en la mesa en vivo.")
+    st.write("Puedes editar directamente cualquier celda en las siguientes tablas (nombres, estatus, estadísticas) o dar de alta/baja jugadores.")
 
-    with st.expander("Administrar Roster (Alta / Baja / Edición de Nombres)", expanded=False):
+    with st.expander("Administrar Roster (Alta / Baja de Jugadores)", expanded=False):
         col_alta, col_baja = st.columns(2)
         
         with col_alta:
@@ -364,77 +362,59 @@ with tab2:
 
     sub_psi, sub_of, sub_def, sub_st = st.tabs([
         "Bienestar Psicodeportivo", 
-        "Unidad Ofensiva (PPG & AVG)", 
-        "Unidad Defensiva (PPG & AVG)", 
-        "Equipos Especiales (PPG)"
+        "Unidad Ofensiva", 
+        "Unidad Defensiva", 
+        "Equipos Especiales"
     ])
 
     with sub_psi:
-        st.subheader("Bienestar Psicodeportivo y Disponibilidad Médica")
+        st.subheader("Edición Directa: Bienestar y Estatus Médico")
         cols_psi = [
             'Jersey', 'Jugador', 'Posición', 'Unidad', 'Estatus_Medico',
             'Fatiga_Entreno', 'Dolor_Muscular', 'Recuperacion_Entreno',
             'Ansiedad_Competitiva', 'Confianza_Tactica', 'Sueno_Prepartido'
         ]
-        df_psi_edit = st.data_editor(st.session_state.df[cols_psi], use_container_width=True, hide_index=True, key="editor_psi")
-        if st.button("Guardar Cambios Psicodeportivos"):
+        df_psi_edit = st.data_editor(st.session_state.df[cols_psi], use_container_width=True, hide_index=True, key="editor_psi_direct")
+        if not df_psi_edit.equals(st.session_state.df[cols_psi]):
             st.session_state.df.update(df_psi_edit)
-            st.success("Datos psicodeportivos actualizados correctamente.")
+            st.success("Cambios psicodeportivos guardados automáticamente.")
 
     with sub_of:
-        st.subheader("Rendimiento Ofensivo (Renombrar jugadores provisionales)")
+        st.subheader("Edición Directa: Rendimiento Ofensivo")
         df_of = st.session_state.df[st.session_state.df['Unidad'] == 'Ofensiva'].copy()
-        pj_safe = df_of['Partidos_Convocados'].replace(0, 1)
-        
-        df_of['PPG_Yardas'] = (df_of['Yardas_Producidas_Partidos'] / pj_safe).round(1)
-        df_of['AVG_Pases_Comp_%'] = ((df_of['Pases_Completados_Partidos'] / df_of['Pases_Intentados_Partidos'].replace(0, 1)) * 100).round(1)
-        
         cols_of_view = [
             'Jersey', 'Jugador', 'Posición', 'Partidos_Convocados', 
-            'Yardas_Producidas_Partidos', 'PPG_Yardas', 
-            'Pases_Intentados_Partidos', 'Pases_Completados_Partidos', 'AVG_Pases_Comp_%',
+            'Yardas_Producidas_Partidos', 'Pases_Intentados_Partidos', 'Pases_Completados_Partidos',
             'Bloqueos_Dominio_Partidos', 'Capturas_Permitidas_Partidos'
         ]
-        df_of_edited = st.data_editor(df_of[cols_of_view], use_container_width=True, hide_index=True, key="edit_of_table")
-        if st.button("Guardar Cambios Ofensiva"):
+        df_of_edited = st.data_editor(df_of[cols_of_view], use_container_width=True, hide_index=True, key="edit_of_direct")
+        if not df_of_edited.equals(df_of[cols_of_view]):
             st.session_state.df.update(df_of_edited)
             st.success("Estadísticas ofensivas actualizadas.")
 
     with sub_def:
-        st.subheader("Rendimiento Defensivo")
+        st.subheader("Edición Directa: Rendimiento Defensivo")
         df_def = st.session_state.df[st.session_state.df['Unidad'] == 'Defensiva'].copy()
-        pj_safe_def = df_def['Partidos_Convocados'].replace(0, 1)
-        
-        df_def['PPG_Tackleadas'] = (df_def['Tackleadas_Efectivas_Partidos'] / pj_safe_def).round(1)
-        df_def['PPG_Sacks'] = (df_def['Capturas_QB_Sacks_Partidos'] / pj_safe_def).round(2)
-        
         cols_def_view = [
             'Jersey', 'Jugador', 'Posición', 'Partidos_Convocados',
-            'Tackleadas_Efectivas_Partidos', 'PPG_Tackleadas',
-            'Intercepciones_Partidos',
-            'Capturas_QB_Sacks_Partidos', 'PPG_Sacks'
+            'Tackleadas_Efectivas_Partidos', 'Intercepciones_Partidos', 'Capturas_QB_Sacks_Partidos'
         ]
-        df_def_edited = st.data_editor(df_def[cols_def_view], use_container_width=True, hide_index=True, key="edit_def_table")
-        if st.button("Guardar Cambios Defensiva"):
+        df_def_edited = st.data_editor(df_def[cols_def_view], use_container_width=True, hide_index=True, key="edit_def_direct")
+        if not df_def_edited.equals(df_def[cols_def_view]):
             st.session_state.df.update(df_def_edited)
             st.success("Estadísticas defensivas actualizadas.")
 
     with sub_st:
-        st.subheader("Rendimiento Equipos Especiales")
+        st.subheader("Edición Directa: Equipos Especiales")
         df_st = st.session_state.df[st.session_state.df['Unidad'] == 'Equipos Especiales'].copy()
-        pj_safe_st = df_st['Partidos_Convocados'].replace(0, 1)
-        
-        df_st['Puntos_Totales'] = (df_st['Goles_Campo_Partidos'] * 3) + df_st['Puntos_Extra_Partidos']
-        df_st['PPG_Puntos'] = (df_st['Puntos_Totales'] / pj_safe_st).round(1)
-        
         cols_st_view = [
             'Jersey', 'Jugador', 'Posición', 'Partidos_Convocados',
-            'Goles_Campo_Partidos', 'Puntos_Extra_Partidos', 'Puntos_Totales', 'PPG_Puntos'
+            'Goles_Campo_Partidos', 'Puntos_Extra_Partidos'
         ]
-        df_st_edited = st.data_editor(df_st[cols_st_view], use_container_width=True, hide_index=True, key="edit_st_table")
-        if st.button("Guardar Cambios ST"):
+        df_st_edited = st.data_editor(df_st[cols_st_view], use_container_width=True, hide_index=True, key="edit_st_direct")
+        if not df_st_edited.equals(df_st[cols_st_view]):
             st.session_state.df.update(df_st_edited)
-            st.success("Estadísticas actualizadas.")
+            st.success("Estadísticas de equipos especiales actualizadas.")
 
 # --- PESTAÑA 5: CALENDARIO Y PLANIFICACIÓN SEMANAL ---
 with tab5:
@@ -457,10 +437,10 @@ with tab5:
     
     st.dataframe(df_calendario, use_container_width=True, hide_index=True)
 
-# --- PESTAÑA 3: BOX SCORE OFICIAL ---
+# --- PESTAÑA 3: BOX SCORE OFICIAL (AHORA TOTALMENTE EDITABLE) ---
 with tab3:
     st.header("Box Score Oficial y Estadísticas por Categoría")
-    st.write("Consulta el reporte general del equipo desglosado por bloques técnicos.")
+    st.write("Puedes modificar cualquier número o nombre directamente sobre las tablas del Box Score.")
     
     df_global = st.session_state.df.copy()
     
@@ -471,7 +451,9 @@ with tab3:
         box_passing = df_of[['Jersey', 'Jugador', 'Posición', 'Pases_C_ATT', 'Yardas_Producidas_Partidos']].rename(columns={
             'Jersey': 'NO.', 'Jugador': 'JUGADOR', 'Posición': 'POS', 'Pases_C_ATT': 'CP-ATT', 'Yardas_Producidas_Partidos': 'YDS'
         })
-        st.dataframe(box_passing, use_container_width=True, hide_index=True)
+        box_passing_edit = st.data_editor(box_passing, use_container_width=True, hide_index=True, key="box_pass_edit")
+        if not box_passing_edit.equals(box_passing):
+            st.success("Box score de ofensiva actualizado.")
 
     st.markdown("### BLOQUEOS Y PROTECCIÓN (OFFENSIVE LINE - OL)")
     df_ol = df_global[df_global['Posición'] == 'OL'].copy()
@@ -479,7 +461,9 @@ with tab3:
         box_blocking = df_ol[['Jersey', 'Jugador', 'Posición', 'Bloqueos_Dominio_Partidos', 'Capturas_Permitidas_Partidos']].rename(columns={
             'Jersey': 'NO.', 'Jugador': 'JUGADOR', 'Posición': 'POS', 'Bloqueos_Dominio_Partidos': 'BLOQUEOS DOMINIO (PANCAKES)', 'Capturas_Permitidas_Partidos': 'SACKS PERMITIDOS'
         })
-        st.dataframe(box_blocking, use_container_width=True, hide_index=True)
+        box_blocking_edit = st.data_editor(box_blocking, use_container_width=True, hide_index=True, key="box_block_edit")
+        if not box_blocking_edit.equals(box_blocking):
+            st.success("Box score de línea ofensiva actualizado.")
 
     st.markdown("### DEFENSE (FRONT 7 & SECUNDARIA)")
     df_def = df_global[df_global['Unidad'] == 'Defensiva'].copy()
@@ -487,7 +471,9 @@ with tab3:
         box_defense = df_def[['Jersey', 'Jugador', 'Posición', 'Tackleadas_Efectivas_Partidos', 'Capturas_QB_Sacks_Partidos', 'Intercepciones_Partidos']].rename(columns={
             'Jersey': 'NO.', 'Jugador': 'JUGADOR', 'Posición': 'POS', 'Tackleadas_Efectivas_Partidos': 'TACKLES', 'Capturas_QB_Sacks_Partidos': 'SACKS', 'Intercepciones_Partidos': 'INT'
         })
-        st.dataframe(box_defense, use_container_width=True, hide_index=True)
+        box_def_edit = st.data_editor(box_defense, use_container_width=True, hide_index=True, key="box_def_edit")
+        if not box_def_edit.equals(box_defense):
+            st.success("Box score defensivo actualizado.")
 
     st.markdown("### KICKING & SPECIAL TEAMS")
     df_st = df_global[df_global['Unidad'] == 'Equipos Especiales'].copy()
@@ -495,7 +481,9 @@ with tab3:
         box_st = df_st[['Jersey', 'Jugador', 'Posición', 'Goles_Campo_Partidos', 'Puntos_Extra_Partidos']].rename(columns={
             'Jersey': 'NO.', 'Jugador': 'JUGADOR', 'Posición': 'POS', 'Goles_Campo_Partidos': 'GOLES DE CAMPO (FG)', 'Puntos_Extra_Partidos': 'PUNTOS EXTRA (PAT)'
         })
-        st.dataframe(box_st, use_container_width=True, hide_index=True)
+        box_st_edit = st.data_editor(box_st, use_container_width=True, hide_index=True, key="box_st_edit")
+        if not box_st_edit.equals(box_st):
+            st.success("Box score de equipos especiales actualizado.")
 
 # --- PESTAÑA 1: ANÁLISIS INDIVIDUAL COMPLETO ---
 with tab1:
