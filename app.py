@@ -173,83 +173,83 @@ with tab4:
 
     if idx_live is not None and jugador_live:
         st.divider()
-        st.subheader(f"🎮 Registrar Jugada para: {jugador_live} ({pos_live})")
+        st.subheader(f"Registrar Jugada para: {jugador_live} ({pos_live})")
 
         if pos_live == 'QB':
             col_q1, col_q2, col_q3 = st.columns(3)
             with col_q1:
                 yds_plus = st.number_input("Yardas en la Jugada", min_value=-15, max_value=99, value=5, step=1, key="qb_yds_live")
-                if st.button("➕ Sumar Yardas"):
+                if st.button("Sumar Yardas"):
                     st.session_state.df.at[idx_live, 'Yardas_Producidas_Partidos'] += yds_plus
-                    st.success(f"¡{yds_plus} yardas sumadas a {jugador_live}!")
+                    st.success(f"{yds_plus} yardas sumadas a {jugador_live}.")
             with col_q2:
-                if st.button("✅ Pase Completado"):
+                if st.button("Pase Completado"):
                     st.session_state.df.at[idx_live, 'Pases_Intentados_Partidos'] += 1
                     st.session_state.df.at[idx_live, 'Pases_Completados_Partidos'] += 1
-                    st.success("¡Pase completado registrado!")
+                    st.success("Pase completado registrado.")
             with col_q3:
-                if st.button("❌ Pase Incompleto"):
+                if st.button("Pase Incompleto"):
                     st.session_state.df.at[idx_live, 'Pases_Intentados_Partidos'] += 1
-                    st.success("¡Pase incompleto registrado!")
+                    st.success("Pase incompleto registrado.")
 
         elif pos_live in ['WR', 'RB']:
             col_w1 = st.columns(1)[0]
             with col_w1:
                 yds_plus = st.number_input("Yardas en la Jugada", min_value=-5, max_value=99, value=5, step=1, key="wr_yds_live")
-                if st.button("➕ Sumar Yardas de Avance"):
+                if st.button("Sumar Yardas de Avance"):
                     st.session_state.df.at[idx_live, 'Yardas_Producidas_Partidos'] += yds_plus
-                    st.success(f"¡{yds_plus} yardas sumadas a {jugador_live}!")
+                    st.success(f"{yds_plus} yardas sumadas a {jugador_live}.")
 
         elif pos_live == 'OL':
             col_ol1, col_ol2 = st.columns(2)
             with col_ol1:
-                if st.button("🥞 Bloqueo de Dominio (Pancake)"):
+                if st.button("Bloqueo de Dominio (Pancake)"):
                     st.session_state.df.at[idx_live, 'Bloqueos_Dominio_Partidos'] += 1
-                    st.success("¡Pancake registrado!")
+                    st.success("Pancake registrado.")
             with col_ol2:
-                if st.button("🛑 Sack Permitido"):
+                if st.button("Sack Permitido"):
                     st.session_state.df.at[idx_live, 'Capturas_Permitidas_Partidos'] += 1
-                    st.success("¡Sack permitido registrado!")
+                    st.success("Sack permitido registrado.")
 
         elif pos_live in ['DL', 'LB']:
             col_d1, col_d2 = st.columns(2)
             with col_d1:
-                if st.button("🎯 Tackleada Efectiva"):
+                if st.button("Tackleada Efectiva"):
                     st.session_state.df.at[idx_live, 'Tackleadas_Efectivas_Partidos'] += 1
-                    st.success("¡Tackleada registrada!")
+                    st.success("Tackleada registrada.")
             with col_d2:
-                if st.button("💥 Sack Defensivo"):
+                if st.button("Sack Defensivo"):
                     st.session_state.df.at[idx_live, 'Capturas_QB_Sacks_Partidos'] += 1
-                    st.success("¡Sack registrado!")
+                    st.success("Sack registrado.")
 
         elif pos_live == 'DB':
             col_db1, col_db2 = st.columns(2)
             with col_db1:
-                if st.button("🎯 Tackleada Efectiva"):
+                if st.button("Tackleada Efectiva"):
                     st.session_state.df.at[idx_live, 'Tackleadas_Efectivas_Partidos'] += 1
-                    st.success("¡Tackleada registrada!")
+                    st.success("Tackleada registrada.")
             with col_db2:
-                if st.button("🏈 Intercepción (INT)"):
+                if st.button("Intercepción (INT)"):
                     st.session_state.df.at[idx_live, 'Intercepciones_Partidos'] += 1
-                    st.success("¡Intercepción registrada!")
+                    st.success("Intercepción registrada.")
 
         elif pos_live in ['K', 'P']:
             col_k1, col_k2 = st.columns(2)
             with col_k1:
-                if st.button("🎯 Gol de Campo (3 pts)"):
+                if st.button("Gol de Campo (3 pts)"):
                     st.session_state.df.at[idx_live, 'Goles_Campo_Partidos'] += 1
-                    st.success("¡Gol de campo registrado!")
+                    st.success("Gol de campo registrado.")
             with col_k2:
-                if st.button("⭐ Punto Extra (PAT)"):
+                if st.button("Punto Extra (PAT)"):
                     st.session_state.df.at[idx_live, 'Puntos_Extra_Partidos'] += 1
-                    st.success("¡Punto extra registrado!")
+                    st.success("Punto extra registrado.")
 
 # --- PESTAÑA 2: BASE DE DATOS Y GESTIÓN DE ROSTER ---
 with tab2:
-    st.header("⚙️ Gestión del Roster y Base de Datos Analítica")
+    st.header("Gestión del Roster y Base de Datos Analítica")
     st.write("Consulta y administra el roster. Aquí puedes renombrar a los jugadores provisionales creados en la mesa en vivo.")
 
-    with st.expander("👤 Administrar Roster (Alta / Baja / Edición de Nombres)", expanded=False):
+    with st.expander("Administrar Roster (Alta / Baja / Edición de Nombres)", expanded=False):
         col_alta, col_baja = st.columns(2)
         
         with col_alta:
@@ -263,9 +263,9 @@ with tab2:
                 submitted_alta = st.form_submit_button("Dar de Alta en el Roster")
                 if submitted_alta:
                     if nuevo_nombre.strip() == "":
-                        st.error("🛑 El nombre del jugador no puede estar vacío.")
+                        st.error("El nombre del jugador no puede estar vacío.")
                     elif nuevo_nombre in st.session_state.df['Jugador'].values:
-                        st.error("🛑 Ya existe un jugador registrado con ese nombre.")
+                        st.error("Ya existe un jugador registrado con ese nombre.")
                     else:
                         nuevo_registro = {
                             'Jersey': int(nuevo_jersey), 'Jugador': nuevo_nombre.strip(), 'Posición': nueva_posicion, 'Unidad': nueva_unidad,
@@ -281,7 +281,7 @@ with tab2:
                             'Historial_Fatiga': [4, 5, 4], 'Historial_Rendimiento_Juego': [0]
                         }
                         st.session_state.df = pd.concat([st.session_state.df, pd.DataFrame([nuevo_registro])], ignore_index=True)
-                        st.success(f"✅ ¡{nuevo_nombre} dado de alta exitosamente!")
+                        st.success(f"{nuevo_nombre} dado de alta exitosamente.")
                         st.rerun()
 
         with col_baja:
@@ -291,16 +291,16 @@ with tab2:
                 submitted_baja = st.form_submit_button("Eliminar del Roster")
                 if submitted_baja:
                     st.session_state.df = st.session_state.df[st.session_state.df['Jugador'] != jugador_a_borrar].reset_index(drop=True)
-                    st.success(f"🗑️ ¡Jugador removido del roster exitosamente!")
+                    st.success("Jugador removido del roster exitosamente.")
                     st.rerun()
 
     st.divider()
 
     sub_psi, sub_of, sub_def, sub_st = st.tabs([
-        "🧠 Psicodeportivo y Bienestar", 
-        "🏈 Unidad Ofensiva (PPG & AVG)", 
-        "🛡️ Unidad Defensiva (PPG & AVG)", 
-        "🦵 Equipos Especiales (PPG)"
+        "Bienestar Psicodeportivo", 
+        "Unidad Ofensiva (PPG & AVG)", 
+        "Unidad Defensiva (PPG & AVG)", 
+        "Equipos Especiales (PPG)"
     ])
 
     with sub_psi:
@@ -313,10 +313,10 @@ with tab2:
         df_psi_edit = st.data_editor(st.session_state.df[cols_psi], use_container_width=True, hide_index=True, key="editor_psi")
         if st.button("Guardar Cambios Psicodeportivos"):
             st.session_state.df.update(df_psi_edit)
-            st.success("¡Datos psicodeportivos actualizados correctamente!")
+            st.success("Datos psicodeportivos actualizados correctamente.")
 
     with sub_of:
-        st.subheader("Rendimiento Ofensivo (Aquí puedes renombrar a los jugadores provisionales)")
+        st.subheader("Rendimiento Ofensivo (Renombrar jugadores provisionales)")
         df_of = st.session_state.df[st.session_state.df['Unidad'] == 'Ofensiva'].copy()
         pj_safe = df_of['Partidos_Convocados'].replace(0, 1)
         
@@ -330,9 +330,9 @@ with tab2:
             'Bloqueos_Dominio_Partidos', 'Capturas_Permitidas_Partidos'
         ]
         df_of_edited = st.data_editor(df_of[cols_of_view], use_container_width=True, hide_index=True, key="edit_of_table")
-        if st.button("Guardar Cambios Nombres / Ofensiva"):
+        if st.button("Guardar Cambios Ofensiva"):
             st.session_state.df.update(df_of_edited)
-            st.success("¡Nombres y estadísticas ofensivas actualizados!")
+            st.success("Estadísticas ofensivas actualizadas.")
 
     with sub_def:
         st.subheader("Rendimiento Defensivo")
@@ -349,9 +349,9 @@ with tab2:
             'Capturas_QB_Sacks_Partidos', 'PPG_Sacks'
         ]
         df_def_edited = st.data_editor(df_def[cols_def_view], use_container_width=True, hide_index=True, key="edit_def_table")
-        if st.button("Guardar Cambios Nombres / Defensiva"):
+        if st.button("Guardar Cambios Defensiva"):
             st.session_state.df.update(df_def_edited)
-            st.success("¡Nombres y estadísticas defensivas actualizados!")
+            st.success("Estadísticas defensivas actualizadas.")
 
     with sub_st:
         st.subheader("Rendimiento Equipos Especiales")
@@ -366,9 +366,9 @@ with tab2:
             'Goles_Campo_Partidos', 'Puntos_Extra_Partidos', 'Puntos_Totales', 'PPG_Puntos'
         ]
         df_st_edited = st.data_editor(df_st[cols_st_view], use_container_width=True, hide_index=True, key="edit_st_table")
-        if st.button("Guardar Cambios Nombres / ST"):
+        if st.button("Guardar Cambios ST"):
             st.session_state.df.update(df_st_edited)
-            st.success("¡Nombres y estadísticas actualizados!")
+            st.success("Estadísticas actualizadas.")
 
 # --- PESTAÑA 5: REGISTRO DIARIO ---
 with tab5:
@@ -413,7 +413,7 @@ with tab5:
         st.divider()
 
         if tipo_registro_principal == "Estadísticas de Partido":
-            st.subheader(f"🏟️ Registro de Partido ({jornada_seleccionada}) para: {jugador_seleccionado} ({pos_actual})")
+            st.subheader(f"Registro de Partido ({jornada_seleccionada}) para: {jugador_seleccionado} ({pos_actual})")
             
             with st.form("form_partido"):
                 convocatoria_partido = st.selectbox("Estatus de Convocatoria / Participación", ["Jugó (Convocado con acción)", "Inactivo / No Convocado"])
@@ -469,10 +469,10 @@ with tab5:
                     if len(hist_rend) > 5: hist_rend.pop(0)
                     st.session_state.df.at[idx, 'Historial_Rendimiento_Juego'] = hist_rend
                     
-                    st.success(f"✅ ¡Estadísticas guardadas para {jugador_seleccionado}!")
+                    st.success(f"Estadísticas guardadas para {jugador_seleccionado}.")
 
         else:
-            st.subheader(f"🧠 Monitoreo Psicodeportivo para: {jugador_seleccionado} ({pos_actual})")
+            st.subheader(f"Monitoreo Psicodeportivo para: {jugador_seleccionado} ({pos_actual})")
             
             tipo_encuesta = st.selectbox(
                 "Selecciona el tipo de evaluación psicológica:", 
@@ -491,12 +491,12 @@ with tab5:
                 sueno_pre_val = int(st.session_state.df.at[idx, 'Sueno_Prepartido'])
 
                 if tipo_encuesta == "Evaluación de Mitad de Semana (Entrenamiento)":
-                    st.markdown("#### 🏋️ Factores de Carga y Fatiga en Entrenamientos")
+                    st.markdown("#### Factores de Carga y Fatiga en Entrenamientos")
                     fatiga_entreno_nueva = st.slider("Fatiga Física Acumulada (1-10)", 1, 10, fatiga_entreno_val)
                     dolor_muscular_nuevo = st.slider("Dolor Muscular / Molestias Menores (1-10)", 1, 10, dolor_muscular_val)
                     recuperacion_nueva = st.slider("Nivel de Recuperación / Frescura (1-10)", 1, 10, recuperacion_val)
                 else:
-                    st.markdown("#### 🏟️ Factores Psicológicos y de Activación Pre-partido")
+                    st.markdown("#### Factores Psicológicos y de Activación Pre-partido")
                     ansiedad_nueva = st.slider("Nivel de Ansiedad / Activación Competitiva (1-10)", 1, 10, ansiedad_val)
                     confianza_nueva = st.slider("Confianza en el Plan de Juego (1-10)", 1, 10, confianza_val)
                     sueno_previo_nuevo = st.slider("Horas de Sueño Noche Previa (Matchday)", 1, 12, sueno_pre_val)
@@ -523,11 +523,11 @@ with tab5:
                         st.session_state.df.at[idx, 'Confianza_Tactica'] = confianza_nueva
                         st.session_state.df.at[idx, 'Sueno_Prepartido'] = sueno_previo_nuevo
                     
-                    st.success(f"✅ ¡{tipo_encuesta} guardada para {jugador_seleccionado}!")
+                    st.success(f"{tipo_encuesta} guardada para {jugador_seleccionado}.")
 
 # --- PESTAÑA 5: CALENDARIO Y PLANIFICACIÓN SEMANAL ---
 with tab5:
-    st.header("📅 Calendario Oficial ONEFA 2026 y Planificación Psicológica")
+    st.header("Calendario Oficial ONEFA 2026 y Planificación Psicológica")
     st.write("Consulta las fechas de la temporada, sedes actualizadas (Estadio Olímpico Universitario - EOU) y el programa de evaluaciones.")
     
     df_calendario = pd.DataFrame({
@@ -548,12 +548,12 @@ with tab5:
 
 # --- PESTAÑA 3: BOX SCORE OFICIAL ---
 with tab3:
-    st.header("📊 Box Score Oficial y Estadísticas por Categoría")
+    st.header("Box Score Oficial y Estadísticas por Categoría")
     st.write("Consulta el reporte general del equipo desglosado por bloques técnicos.")
     
     df_global = st.session_state.df.copy()
     
-    st.markdown("### 🏈 OFENSIVA: PASSING & RUSHING (QB, WR, RB)")
+    st.markdown("### OFENSIVA: PASSING & RUSHING (QB, WR, RB)")
     df_of = df_global[df_global['Unidad'] == 'Ofensiva'].copy()
     if not df_of.empty:
         df_of['Pases_C_ATT'] = df_of['Pases_Completados_Partidos'].astype(str) + "-" + df_of['Pases_Intentados_Partidos'].astype(str)
@@ -562,7 +562,7 @@ with tab3:
         })
         st.dataframe(box_passing, use_container_width=True, hide_index=True)
 
-    st.markdown("### 🛑 BLOQUEOS Y PROTECCIÓN (OFFENSIVE LINE - OL)")
+    st.markdown("### BLOQUEOS Y PROTECCIÓN (OFFENSIVE LINE - OL)")
     df_ol = df_global[df_global['Posición'] == 'OL'].copy()
     if not df_ol.empty:
         box_blocking = df_ol[['Jersey', 'Jugador', 'Posición', 'Bloqueos_Dominio_Partidos', 'Capturas_Permitidas_Partidos']].rename(columns={
@@ -570,7 +570,7 @@ with tab3:
         })
         st.dataframe(box_blocking, use_container_width=True, hide_index=True)
 
-    st.markdown("### 🛡️ DEFENSE (FRONT 7 & SECUNDARIA)")
+    st.markdown("### DEFENSE (FRONT 7 & SECUNDARIA)")
     df_def = df_global[df_global['Unidad'] == 'Defensiva'].copy()
     if not df_def.empty:
         box_defense = df_def[['Jersey', 'Jugador', 'Posición', 'Tackleadas_Efectivas_Partidos', 'Capturas_QB_Sacks_Partidos', 'Intercepciones_Partidos']].rename(columns={
@@ -578,7 +578,7 @@ with tab3:
         })
         st.dataframe(box_defense, use_container_width=True, hide_index=True)
 
-    st.markdown("### 🦵 KICKING & SPECIAL TEAMS")
+    st.markdown("### KICKING & SPECIAL TEAMS")
     df_st = df_global[df_global['Unidad'] == 'Equipos Especiales'].copy()
     if not df_st.empty:
         box_st = df_st[['Jersey', 'Jugador', 'Posición', 'Goles_Campo_Partidos', 'Puntos_Extra_Partidos']].rename(columns={
@@ -624,11 +624,11 @@ with tab1:
                 
                 with col_semaforo:
                     if estatus == "Lesionado / Inactivo" or indice_riesgo >= 7.0:
-                        st.error(f"🔴 **RIESGO ALTO** (Índice: {indice_riesgo:.1f}/10)")
+                        st.error(f"RIESGO ALTO (Índice: {indice_riesgo:.1f}/10)")
                     elif estatus == "Precaución Médica" or indice_riesgo >= 5.0:
-                        st.warning(f"🟡 **RIESGO MODERADO** (Índice: {indice_riesgo:.1f}/10)")
+                        st.warning(f"RIESGO MODERADO (Índice: {indice_riesgo:.1f}/10)")
                     else:
-                        st.success(f"🟢 **ÓPTIMO / DISPONIBLE** (Índice: {indice_riesgo:.1f}/10)")
+                        st.success(f"ÓPTIMO / DISPONIBLE (Índice: {indice_riesgo:.1f}/10)")
 
                 entrenos_tot = max(int(stats_jugador['Entrenos_Programados']), 1)
                 entrenos_asist = int(stats_jugador['Entrenos_Asistidos'])
@@ -640,11 +640,11 @@ with tab1:
 
                 col_p1, col_p2 = st.columns(2)
                 with col_p1:
-                    st.markdown(f"🏋️ **Asistencia a Entrenamientos:** `{pct_entrenos:.1f}%` ({entrenos_asist}/{entrenos_tot})")
+                    st.markdown(f"Asistencia a Entrenamientos: `{pct_entrenos:.1f}%` ({entrenos_asist}/{entrenos_tot})")
                 with col_p2:
-                    st.markdown(f"🏟️ **Convocatoria en Partidos:** `{pct_partidos:.1f}%` ({partidos_jugados}/{partidos_tot})")
+                    st.markdown(f"Convocatoria en Partidos: `{pct_partidos:.1f}%` ({partidos_jugados}/{partidos_tot})")
 
-                st.subheader("📊 Métricas de Rendimiento (PPG & AVG)")
+                st.subheader("Métricas de Rendimiento (PPG & AVG)")
                 col1, col2, col3 = st.columns(3)
                 
                 pj = stats_jugador['PJ_Calc']
@@ -697,17 +697,17 @@ with tab1:
 
                 st.divider()
 
-                st.subheader("🧠 Perfil Psicodeportivo Especializado")
+                st.subheader("Perfil Psicodeportivo Especializado")
                 
                 col_psi1, col_psi2 = st.columns(2)
                 with col_psi1:
-                    st.markdown("### 🏋️ Mitad de Semana (Entrenamientos)")
+                    st.markdown("#### Mitad de Semana (Entrenamientos)")
                     st.metric("Fatiga Física Acumulada", f"{stats_jugador['Fatiga_Entreno']}/10")
                     st.metric("Dolor / Molestias Físicas", f"{stats_jugador['Dolor_Muscular']}/10")
                     st.metric("Recuperación / Frescura", f"{stats_jugador['Recuperacion_Entreno']}/10")
                 
                 with col_psi2:
-                    st.markdown("### 🏟️ Pre-partido (Matchday)")
+                    st.markdown("#### Pre-partido (Matchday)")
                     st.metric("Ansiedad / Activación", f"{stats_jugador['Ansiedad_Competitiva']}/10")
                     st.metric("Confianza Táctica", f"{stats_jugador['Confianza_Tactica']}/10")
                     st.metric("Sueño Noche Previa", f"{stats_jugador['Sueno_Prepartido']} hrs")
@@ -716,10 +716,10 @@ with tab1:
 
                 col_g1, col_g2 = st.columns(2)
                 with col_g1:
-                    st.write("📈 **Tendencia de Fatiga en Entrenamientos:**")
+                    st.write("Tendencia de Fatiga en Entrenamientos:")
                     df_tendencia_fatiga = pd.DataFrame({'Fatiga': stats_jugador['Historial_Fatiga']})
                     st.line_chart(df_tendencia_fatiga)
                 with col_g2:
-                    st.write("🏈 **Evolución de Rendimiento Juego a Juego:**")
+                    st.write("Evolución de Rendimiento Juego a Juego:")
                     df_tendencia_juego = pd.DataFrame({'Impacto': stats_jugador['Historial_Rendimiento_Juego']})
                     st.line_chart(df_tendencia_juego)
