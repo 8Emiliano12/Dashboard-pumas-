@@ -88,7 +88,7 @@ if 'df' not in st.session_state:
     }
     st.session_state.df = pd.DataFrame(datos_iniciales)
 
-# Pestañas de la aplicación (Sin mención a NCAA)
+# Pestañas de la aplicación
 tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
     "📊 Análisis Individual", 
     "⚙️ Base de Datos", 
@@ -98,7 +98,7 @@ tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
     "📅 Calendario"
 ])
 
-# --- PESTAÑA 4: MESA DE ANOTACIÓN EN VIVO (LIVE SCORING CORREGIDO) ---
+# --- PESTAÑA 4: MESA DE ANOTACIÓN EN VIVO (LIVE SCORING) ---
 with tab4:
     st.header("⚡ Mesa de Anotación Táctil en Vivo")
     st.write("Selecciona al jugador por su unidad o captura su número de jersey exprés para registrar acciones jugada a jugada.")
@@ -153,12 +153,8 @@ with tab4:
             unidad_asignada = "Ofensiva" if pos_exprs in ["QB", "RB", "WR", "OL"] else ("Defensiva" if pos_exprs in ["DL", "LB", "DB"] else "Equipos Especiales")
             
             nuevo_registro = {
-                'Jersey': int(jersey_exprs),
-                'Jugador': nombre_provisional,
-                'Posición': pos_exprs,
-                'Unidad': unidad_asignada,
-                'Estatus_Medico': 'Activo',
-                'Entrenos_Programados': 1, 'Entrenos_Asistidos': 1, 'Partidos_Programados': 1, 'Partidos_Convocados': 1,
+                'Jersey': int(jersey_exprs), 'Jugador': nombre_provisional, 'Posición': pos_exprs, 'Unidad': unidad_asignada,
+                'Estatus_Medico': 'Activo', 'Entrenos_Programados': 1, 'Entrenos_Asistidos': 1, 'Partidos_Programados': 1, 'Partidos_Convocados': 1,
                 'Yardas_Producidas_Partidos': 0, 'Pases_Intentados_Partidos': 0, 'Pases_Completados_Partidos': 0,
                 'Bloqueos_Dominio_Partidos': 0, 'Capturas_Permitidas_Partidos': 0, 'Tackleadas_Efectivas_Partidos': 0,
                 'Intercepciones_Partidos': 0, 'Capturas_QB_Sacks_Partidos': 0, 'Goles_Campo_Partidos': 0, 'Puntos_Extra_Partidos': 0,
@@ -590,7 +586,7 @@ with tab3:
         })
         st.dataframe(box_st, use_container_width=True, hide_index=True)
 
-# --- PESTAÑA 1: ANÁLISIS INDIVIDUAL ---
+# --- PESTAÑA 1: ANÁLISIS INDIVIDUAL COMPLETO ---
 with tab1:
     df = st.session_state.df.copy()
     df['PJ_Calc'] = df['Partidos_Convocados'].replace(0, 1)
@@ -613,20 +609,117 @@ with tab1:
                 pos = stats_jugador['Posición']
 
                 st.divider()
-                st.header(f"Análisis: {jugador_filtro} - #{stats_jugador['Jersey']} ({pos})")
+                
+                estatus = stats_jugador['Estatus_Medico']
+                fatiga_entreno = stats_jugador['Fatiga_Entreno']
+                ansiedad = stats_jugador['Ansiedad_Competitiva']
+                sueno_pre = stats_jugador['Sueno_Prepartido']
+                
+                factor_sueno_inv = max(0, (10 - sueno_pre))
+                indice_riesgo = (fatiga_entreno * 0.4) + (ansiedad * 0.4) + (factor_sueno_inv * 0.2)
+
+                col_title, col_semaforo = st.columns([2, 1])
+                with col_title:
+                    st.header(f"Análisis: {jugador_filtro} - #{stats_jugador['Jersey']} ({pos})")
+                
+                with col_semaforo:
+                    if estatus == "Lesionado / Inactivo" or indice_riesgo >= 7.0:
+                        st.error(f"🔴 **RIESGO ALTO** (Índice: {indice_riesgo:.1f}/10)")
+                    elif estatus == "Precaución Médica" or indice_riesgo >= 5.0:
+                        st.warning(f"🟡 **RIESGO MODERADO** (Índice: {indice_riesgo:.1f}/10)")
+                    else:
+                        st.success(f"🟢 **ÓPTIMO / DISPONIBLE** (Índice: {indice_riesgo:.1f}/10)")
+
+                entrenos_tot = max(int(stats_jugador['Entrenos_Programados']), 1)
+                entrenos_asist = int(stats_jugador['Entrenos_Asistidos'])
+                pct_entrenos = min(100.0, (entrenos_asist / entrenos_tot) * 100)
+
+                partidos_tot = max(int(stats_jugador['Partidos_Programados']), 1)
+                partidos_jugados = int(stats_jugador['Partidos_Convocados'])
+                pct_partidos = min(100.0, (partidos_jugados / partidos_tot) * 100)
+
+                col_p1, col_p2 = st.columns(2)
+                with col_p1:
+                    st.markdown(f"🏋️ **Asistencia a Entrenamientos:** `{pct_entrenos:.1f}%` ({entrenos_asist}/{entrenos_tot})")
+                with col_p2:
+                    st.markdown(f"🏟️ **Convocatoria en Partidos:** `{pct_partidos:.1f}%` ({partidos_jugados}/{partidos_tot})")
+
+                st.subheader("📊 Métricas de Rendimiento (PPG & AVG)")
+                col1, col2, col3 = st.columns(3)
                 
                 pj = stats_jugador['PJ_Calc']
-                col1, col2, col3 = st.columns(3)
+                pe = stats_jugador['PE_Calc']
+
                 if pos == 'QB':
-                    with col1: st.metric("PPG (Yardas / Partido)", f"{stats_jugador['Yardas_Producidas_Partidos'] / pj:.1f} yds")
-                    with col2: st.metric("Total Yardas", int(stats_jugador['Yardas_Producidas_Partidos']))
+                    intentos_tot = stats_jugador['Pases_Intentados_Partidos']
+                    completados_tot = stats_jugador['Pases_Completados_Partidos']
+                    pct_comp = (completados_tot / intentos_tot * 100) if intentos_tot > 0 else 0.0
+                    yardas_ppg = stats_jugador['Yardas_Producidas_Partidos'] / pj
+                    with col1: st.metric("PPG (Yardas / Partido)", f"{yardas_ppg:.1f} yds")
+                    with col2: st.metric("AVG Pases (Comp / Int)", f"{pct_comp:.1f}%", f"{completados_tot}/{intentos_tot}")
+                    with col3: st.metric("Total Yardas Acumuladas", int(stats_jugador['Yardas_Producidas_Partidos']))
                 elif pos in ['WR', 'RB']:
-                    with col1: st.metric("PPG (Yardas / Partido)", f"{stats_jugador['Yardas_Producidas_Partidos'] / pj:.1f} yds")
+                    yardas_ppg = stats_jugador['Yardas_Producidas_Partidos'] / pj
+                    yardas_avg_entreno = stats_jugador['Yardas_Producidas_Entrenos'] / pe
+                    with col1: st.metric("PPG (Yardas / Partido)", f"{yardas_ppg:.1f} yds")
+                    with col2: st.metric("AVG Yardas / Entreno", f"{yardas_avg_entreno:.1f} yds")
+                    with col3: st.metric("Total Yardas Acumuladas", int(stats_jugador['Yardas_Producidas_Partidos'] + stats_jugador['Yardas_Producidas_Entrenos']))
+                
                 elif pos == 'OL':
-                    with col1: st.metric("PPG (Pancakes / Partido)", f"{stats_jugador['Bloqueos_Dominio_Partidos'] / pj:.1f}")
+                    pancakes_ppg = stats_jugador['Bloqueos_Dominio_Partidos'] / pj
+                    sacks_permitidos = stats_jugador['Capturas_Permitidas_Partidos']
+                    with col1: st.metric("PPG (Bloqueos Dominio / P.)", f"{pancakes_ppg:.1f}")
+                    with col2: st.metric("AVG Bloqueos / Entreno", f"{stats_jugador['Bloqueos_Dominio_Entrenos'] / pe:.1f}")
+                    with col3: st.metric("Capturas Permitidas (Total)", int(sacks_permitidos))
+                
                 elif pos in ['DL', 'LB']:
-                    with col1: st.metric("PPG (Tackleadas / Partido)", f"{stats_jugador['Tackleadas_Efectivas_Partidos'] / pj:.1f}")
+                    tackleadas_ppg = stats_jugador['Tackleadas_Efectivas_Partidos'] / pj
+                    sacks_ppg = stats_jugador['Capturas_QB_Sacks_Partidos'] / pj
+                    with col1: st.metric("PPG (Tackleadas / Partido)", f"{tackleadas_ppg:.1f}")
+                    with col2: st.metric("AVG Sacks / Partido", f"{sacks_ppg:.2f}")
+                    with col3: st.metric("Total Sacks (Partidos)", int(stats_jugador['Capturas_QB_Sacks_Partidos']))
+                
                 elif pos == 'DB':
-                    with col1: st.metric("PPG (Intercepciones / P.)", f"{stats_jugador['Intercepciones_Partidos'] / pj:.2f}")
+                    intercepciones_ppg = stats_jugador['Intercepciones_Partidos'] / pj
+                    tackleadas_ppg = stats_jugador['Tackleadas_Efectivas_Partidos'] / pj
+                    with col1: st.metric("PPG (Intercepciones / P.)", f"{intercepciones_ppg:.2f}")
+                    with col2: st.metric("AVG Tackleadas / Partido", f"{tackleadas_ppg:.1f}")
+                    with col3: st.metric("Total Intercepciones", int(stats_jugador['Intercepciones_Partidos']))
+                
                 elif pos in ['K', 'P']:
-                    with col1: st.metric("Puntos Totales", int((stats_jugador['Goles_Campo_Partidos'] * 3) + stats_jugador['Puntos_Extra_Partidos']))
+                    goles_campo = stats_jugador['Goles_Campo_Partidos']
+                    puntos_extra = stats_jugador['Puntos_Extra_Partidos']
+                    puntos_totales = (goles_campo * 3) + puntos_extra
+                    ppg_puntos = puntos_totales / pj
+                    with col1: st.metric("PPG (Puntos / Partido)", f"{ppg_puntos:.1f} pts")
+                    with col2: st.metric("Goles de Campo (Total)", int(goles_campo))
+                    with col3: st.metric("Puntos Extra (Total)", int(puntos_extra))
+
+                st.divider()
+
+                st.subheader("🧠 Perfil Psicodeportivo Especializado")
+                
+                col_psi1, col_psi2 = st.columns(2)
+                with col_psi1:
+                    st.markdown("### 🏋️ Mitad de Semana (Entrenamientos)")
+                    st.metric("Fatiga Física Acumulada", f"{stats_jugador['Fatiga_Entreno']}/10")
+                    st.metric("Dolor / Molestias Físicas", f"{stats_jugador['Dolor_Muscular']}/10")
+                    st.metric("Recuperación / Frescura", f"{stats_jugador['Recuperacion_Entreno']}/10")
+                
+                with col_psi2:
+                    st.markdown("### 🏟️ Pre-partido (Matchday)")
+                    st.metric("Ansiedad / Activación", f"{stats_jugador['Ansiedad_Competitiva']}/10")
+                    st.metric("Confianza Táctica", f"{stats_jugador['Confianza_Tactica']}/10")
+                    st.metric("Sueño Noche Previa", f"{stats_jugador['Sueno_Prepartido']} hrs")
+
+                st.divider()
+
+                col_g1, col_g2 = st.columns(2)
+                with col_g1:
+                    st.write("📈 **Tendencia de Fatiga en Entrenamientos:**")
+                    df_tendencia_fatiga = pd.DataFrame({'Fatiga': stats_jugador['Historial_Fatiga']})
+                    st.line_chart(df_tendencia_fatiga)
+                with col_g2:
+                    st.write("🏈 **Evolución de Rendimiento Juego a Juego:**")
+                    df_tendencia_juego = pd.DataFrame({'Impacto': stats_jugador['Historial_Rendimiento_Juego']})
+                    st.line_chart(df_tendencia_juego)
