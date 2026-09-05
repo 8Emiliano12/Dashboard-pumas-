@@ -178,34 +178,25 @@ with tab4:
     else:
         st.subheader(f"🧠 Monitoreo Psicodeportivo ({jornada_seleccionada}) para: {jugador_seleccionado} ({pos_actual})")
         
+        # Selector tipo selectbox para garantizar que Streamlit actualice la pantalla al instante
+        tipo_encuesta = st.selectbox(
+            "Selecciona el tipo de evaluación psicológica:", 
+            ["Evaluación de Mitad de Semana (Entrenamiento)", "Evaluación Pre-partido (Matchday)"]
+        )
+        
+        st.write("---")
+        
         with st.form("form_psico"):
-            tipo_encuesta = st.radio(
-                "Selecciona el tipo de evaluación psicológica:", 
-                ["Evaluación de Mitad de Semana (Entrenamiento)", "Evaluación Pre-partido (Matchday)"],
-                horizontal=True
-            )
-            
-            st.write("---")
-            
-            # Inicializamos variables locales limpias para evitar cruces
-            fatiga_entreno_val = int(st.session_state.df.at[idx, 'Fatiga_Entreno'])
-            dolor_muscular_val = int(st.session_state.df.at[idx, 'Dolor_Muscular'])
-            recuperacion_val = int(st.session_state.df.at[idx, 'Recuperacion_Entreno'])
-            
-            ansiedad_val = int(st.session_state.df.at[idx, 'Ansiedad_Competitiva'])
-            confianza_val = int(st.session_state.df.at[idx, 'Confianza_Tactica'])
-            sueno_pre_val = int(st.session_state.df.at[idx, 'Sueno_Prepartido'])
-
             if tipo_encuesta == "Evaluación de Mitad de Semana (Entrenamiento)":
                 st.markdown("#### 🏋️ Factores de Carga y Fatiga en Entrenamientos")
-                fatiga_entreno_nueva = st.slider("Fatiga Física Acumulada (1-10)", 1, 10, fatiga_entreno_val)
-                dolor_muscular_nuevo = st.slider("Dolor Muscular / Molestias Menores (1-10)", 1, 10, dolor_muscular_val)
-                recuperacion_nueva = st.slider("Nivel de Recuperación / Frescura (1-10)", 1, 10, recuperacion_val)
+                fatiga_entreno_nueva = st.slider("Fatiga Física Acumulada (1-10)", 1, 10, int(st.session_state.df.at[idx, 'Fatiga_Entreno']))
+                dolor_muscular_nuevo = st.slider("Dolor Muscular / Molestias Menores (1-10)", 1, 10, int(st.session_state.df.at[idx, 'Dolor_Muscular']))
+                recuperacion_nueva = st.slider("Nivel de Recuperación / Frescura (1-10)", 1, 10, int(st.session_state.df.at[idx, 'Recuperacion_Entreno']))
             else:
                 st.markdown("#### 🏟️ Factores Psicológicos y de Activación Pre-partido")
-                ansiedad_nueva = st.slider("Nivel de Ansiedad / Activación Competitiva (1-10)", 1, 10, ansiedad_val)
-                confianza_nueva = st.slider("Confianza en el Plan de Juego (1-10)", 1, 10, confianza_val)
-                sueno_previo_nuevo = st.slider("Horas de Sueño Noche Previa (Matchday)", 1, 12, sueno_pre_val)
+                ansiedad_nueva = st.slider("Nivel de Ansiedad / Activación Competitiva (1-10)", 1, 10, int(st.session_state.df.at[idx, 'Ansiedad_Competitiva']))
+                confianza_nueva = st.slider("Confianza en el Plan de Juego (1-10)", 1, 10, int(st.session_state.df.at[idx, 'Confianza_Tactica']))
+                sueno_previo_nuevo = st.slider("Horas de Sueño Noche Previa (Matchday)", 1, 12, int(st.session_state.df.at[idx, 'Sueno_Prepartido']))
             
             asistencia_entreno = st.selectbox("Asistencia a la sesión", ["Asistió", "No Asistió"])
             nuevo_estatus = st.selectbox("Estatus Médico / Disponibilidad", ["Activo", "Precaución Médica", "Lesionado / Inactivo"], index=["Activo", "Precaución Médica", "Lesionado / Inactivo"].index(st.session_state.df.at[idx, 'Estatus_Medico']) if st.session_state.df.at[idx, 'Estatus_Medico'] in ["Activo", "Precaución Médica", "Lesionado / Inactivo"] else 0)
@@ -342,7 +333,6 @@ with tab1:
                 ansiedad = stats_jugador['Ansiedad_Competitiva']
                 sueno_pre = stats_jugador['Sueno_Prepartido']
                 
-                # Fórmula de riesgo basada en fatiga y ansiedad pre-partido
                 factor_sueno_inv = max(0, (10 - sueno_pre))
                 indice_riesgo = (fatiga_entreno * 0.4) + (ansiedad * 0.4) + (factor_sueno_inv * 0.2)
 
