@@ -4,42 +4,51 @@ import pandas as pd
 st.set_page_config(page_title="Dashboard Pumas CU", layout="wide")
 st.title("Panel de Control: Rendimiento y Bienestar - Pumas CU")
 
-# 1. Memoria de la sesión con métricas específicas por posición
+# 1. Base de datos con Equipos Especiales integrados
 if 'df' not in st.session_state:
     datos_iniciales = {
-        'Jersey': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 73],
+        'Jersey': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 73, 87],
         'Jugador': [
             'Josh Alexander Morfín González', 'Raul Rodrigo Blanco Ruiz', 'Aaron Soriano Vacasoydel', 
             'Leonardo David Garza Peña', 'Diego Mercado Sánchez', 'Julio Cesar Hernández Hernández',
             'Abraham González López', 'Luis Miguel Bañuelos Medina', 'Luis Higelin Castañeda',
             'Joaquin Aramis Carrillo Palma', 'Emiliano Sánchez Hernández', 'Raymundo Licea Gómez',
-            'Christopher Bryan Cardona Padrón', 'Jesús Fernando Inzunza López'
+            'Christopher Bryan Cardona Padrón', 'Jesús Fernando Inzunza López', 'Emiliano Zamora Jerónimo'
         ],
-        'Posición': ['DL', 'WR', 'DB', 'QB', 'LB', 'DB', 'LB', 'DB', 'DB', 'DL', 'QB', 'DL', 'WR', 'OL'],
-        'Unidad': ['Defensiva', 'Ofensiva', 'Defensiva', 'Ofensiva', 'Defensiva', 'Defensiva', 'Defensiva', 'Defensiva', 'Defensiva', 'Defensiva', 'Ofensiva', 'Defensiva', 'Ofensiva', 'Ofensiva'],
-        'Targets_Intentos': [0]*14,
-        'Completos_Recepciones': [0]*14,
-        'Yardas_Totales': [0]*14,
-        'Tackleadas': [0]*14,
-        'Intercepciones': [0]*14,
-        'Bloqueos_Efectivos': [0]*14,
-        'Capturas_Permitidas': [0]*14,
-        'Capturas_QB': [0]*14,
-        'Carga_Mental_Semanal': [0]*14,
-        'Calidad_Sueno': [0]*14,
-        'Fatiga_Traslado': [0]*14
+        'Posición': ['DL', 'WR', 'DB', 'QB', 'LB', 'DB', 'LB', 'DB', 'DB', 'DL', 'QB', 'DL', 'WR', 'OL', 'K'],
+        'Unidad': ['Defensiva', 'Ofensiva', 'Defensiva', 'Ofensiva', 'Defensiva', 'Defensiva', 'Defensiva', 'Defensiva', 'Defensiva', 'Defensiva', 'Ofensiva', 'Defensiva', 'Ofensiva', 'Ofensiva', 'Equipos Especiales'],
+        'Targets_Intentos': [0]*15,
+        'Completos_Recepciones': [0]*15,
+        'Yardas_Totales': [0]*15,
+        'Tackleadas': [0]*15,
+        'Intercepciones': [0]*15,
+        'Bloqueos_Efectivos': [0]*15,
+        'Capturas_Permitidas': [0]*15,
+        'Capturas_QB': [0]*15,
+        'Goles_Campo': [0]*15,      # Nuevo para Equipos Especiales
+        'Puntos_Extra': [0]*15,     # Nuevo para Equipos Especiales
+        'Carga_Mental_Semanal': [0]*15,
+        'Calidad_Sueno': [0]*15,
+        'Fatiga_Traslado': [0]*15
     }
     st.session_state.df = pd.DataFrame(datos_iniciales)
 
-# 2. Pestañas de Navegación
 tab1, tab2, tab3, tab4 = st.tabs(["📊 Análisis Individual", "⚙️ Base de Datos", "📈 Rendimiento Equipo", "📝 Registro Diario"])
 
-# --- PESTAÑA 4: REGISTRO DIARIO (CORREGIDO) ---
+# --- PESTAÑA 4: REGISTRO DIARIO (FILTRO POR UNIDAD) ---
 with tab4:
     st.header("Captura de Entrenamientos y Partidos")
     
-    # ¡LA CLAVE! El selector debe estar FUERA del formulario para que actualice en tiempo real
-    jugador_seleccionado = st.selectbox("Selecciona al Jugador a evaluar", st.session_state.df['Jugador'].tolist())
+    col_filtro1, col_filtro2 = st.columns(2)
+    with col_filtro1:
+        unidad_registro = st.selectbox("1. Selecciona la Unidad", st.session_state.df['Unidad'].unique())
+    
+    # Filtrar la lista de jugadores basándose en la unidad seleccionada
+    jugadores_filtrados = st.session_state.df[st.session_state.df['Unidad'] == unidad_registro]['Jugador'].tolist()
+    
+    with col_filtro2:
+        jugador_seleccionado = st.selectbox("2. Selecciona al Jugador", jugadores_filtrados)
+    
     idx = st.session_state.df.index[st.session_state.df['Jugador'] == jugador_seleccionado].tolist()[0]
     pos_actual = st.session_state.df.at[idx, 'Posición']
     
@@ -47,18 +56,19 @@ with tab4:
         col_a, col_b = st.columns(2)
         
         with col_a:
-            st.subheader("1. Bienestar de Hoy")
+            st.subheader("Estado de Bienestar Diario")
             carga_nueva = st.slider("Carga Mental/Académica (1-10)", 1, 10, 5)
             sueno_nuevo = st.slider("Horas de Sueño", 1, 12, 7)
             fatiga_nueva = st.slider("Nivel de Fatiga Física (1-10)", 1, 10, 5)
 
         with col_b:
-            st.subheader("2. Rendimiento en Campo")
-            st.write(f"*(Campos adaptados para la posición: **{pos_actual}**)*")
+            st.subheader("Rendimiento en Campo")
+            st.write(f"*(Métricas adaptadas para: **{pos_actual}**)*")
             
             n_intentos, n_completos, n_yardas = 0, 0, 0
             n_tackleadas, n_intercepciones, n_capturas_qb = 0, 0, 0
             n_bloqueos, n_capturas_perm = 0, 0
+            n_goles_campo, n_puntos_extra = 0, 0
             
             if pos_actual in ['QB', 'WR', 'RB']:
                 n_intentos = st.number_input("Targets/Intentos de Pase", min_value=0, value=0)
@@ -73,6 +83,9 @@ with tab4:
             elif pos_actual == 'DB':
                 n_tackleadas = st.number_input("Tackleadas", min_value=0, value=0)
                 n_intercepciones = st.number_input("Intercepciones", min_value=0, value=0)
+            elif pos_actual in ['K', 'P']:
+                n_goles_campo = st.number_input("Goles de Campo Anotados", min_value=0, value=0)
+                n_puntos_extra = st.number_input("Puntos Extra Anotados (PATs)", min_value=0, value=0)
         
         submitted = st.form_submit_button("Guardar Registro del Día")
         
@@ -85,30 +98,38 @@ with tab4:
             st.session_state.df.at[idx, 'Capturas_QB'] += n_capturas_qb
             st.session_state.df.at[idx, 'Bloqueos_Efectivos'] += n_bloqueos
             st.session_state.df.at[idx, 'Capturas_Permitidas'] += n_capturas_perm
+            st.session_state.df.at[idx, 'Goles_Campo'] += n_goles_campo
+            st.session_state.df.at[idx, 'Puntos_Extra'] += n_puntos_extra
             
             st.session_state.df.at[idx, 'Carga_Mental_Semanal'] = carga_nueva
             st.session_state.df.at[idx, 'Calidad_Sueno'] = sueno_nuevo
             st.session_state.df.at[idx, 'Fatiga_Traslado'] = fatiga_nueva
             
-            st.success(f"✅ ¡Datos de {jugador_seleccionado} ({pos_actual}) actualizados con éxito!")
+            st.success(f"✅ ¡Datos de {jugador_seleccionado} ({pos_actual}) actualizados!")
 
 # --- PESTAÑA 3: RENDIMIENTO DEL EQUIPO ---
 with tab3:
     st.header("Análisis General por Unidades")
     df_global = st.session_state.df.copy()
-    col_ofensiva, col_defensiva = st.columns(2)
+    col_of, col_def, col_st = st.columns(3)
     
-    with col_ofensiva:
-        st.subheader("🏈 Unidad Ofensiva")
-        ofensiva_df = df_global[df_global['Unidad'] == 'Ofensiva']
-        st.metric("Yardas Totales Producidas", int(ofensiva_df['Yardas_Totales'].sum()))
-        st.metric("Promedio Carga Mental (Ofensiva)", f"{ofensiva_df['Carga_Mental_Semanal'].mean():.1f}/10" if not ofensiva_df.empty else "0/10")
+    with col_of:
+        st.subheader("🏈 Ofensiva")
+        of_df = df_global[df_global['Unidad'] == 'Ofensiva']
+        st.metric("Yardas Totales", int(of_df['Yardas_Totales'].sum()))
+        st.metric("Promedio Carga Mental", f"{of_df['Carga_Mental_Semanal'].mean():.1f}/10" if not of_df.empty else "0/10")
         
-    with col_defensiva:
-        st.subheader("🛡️ Unidad Defensiva")
-        defensiva_df = df_global[df_global['Unidad'] == 'Defensiva']
-        st.metric("Tackleadas Totales", int(defensiva_df['Tackleadas'].sum()))
-        st.metric("Promedio Carga Mental (Defensiva)", f"{defensiva_df['Carga_Mental_Semanal'].mean():.1f}/10" if not defensiva_df.empty else "0/10")
+    with col_def:
+        st.subheader("🛡️ Defensiva")
+        def_df = df_global[df_global['Unidad'] == 'Defensiva']
+        st.metric("Tackleadas Totales", int(def_df['Tackleadas'].sum()))
+        st.metric("Promedio Carga Mental", f"{def_df['Carga_Mental_Semanal'].mean():.1f}/10" if not def_df.empty else "0/10")
+        
+    with col_st:
+        st.subheader("🦵 Equipos Especiales")
+        st_df = df_global[df_global['Unidad'] == 'Equipos Especiales']
+        st.metric("Puntos Totales (Kicking)", int((st_df['Goles_Campo'].sum() * 3) + (st_df['Puntos_Extra'].sum() * 1)))
+        st.metric("Promedio Carga Mental", f"{st_df['Carga_Mental_Semanal'].mean():.1f}/10" if not st_df.empty else "0/10")
 
 # --- PESTAÑA 2: BASE DE DATOS Y EDICIÓN ---
 with tab2:
@@ -118,10 +139,9 @@ with tab2:
         st.session_state.df = df_editado
         st.success("¡Base de datos actualizada correctamente!")
 
-# --- PESTAÑA 1: ANÁLISIS DEL COACH (DINÁMICO) ---
+# --- PESTAÑA 1: ANÁLISIS DEL COACH ---
 with tab1:
     df = st.session_state.df.copy()
-    
     df['Targets_Intentos_Calc'] = df['Targets_Intentos'].replace(0, 1) 
     df['Efectividad (%)'] = (df['Completos_Recepciones'] / df['Targets_Intentos_Calc']) * 100
     df['Eficiencia (Yds/Intento)'] = df['Yardas_Totales'] / df['Targets_Intentos_Calc']
@@ -159,6 +179,10 @@ with tab1:
                 elif pos == 'DB':
                     with col1: st.metric(label="Tackleadas", value=int(stats_jugador['Tackleadas']))
                     with col2: st.metric(label="Intercepciones", value=int(stats_jugador['Intercepciones']))
+                elif pos in ['K', 'P']:
+                    with col1: st.metric(label="Goles de Campo", value=int(stats_jugador['Goles_Campo']))
+                    with col2: st.metric(label="Puntos Extra (PATs)", value=int(stats_jugador['Puntos_Extra']))
+                    with col3: st.metric(label="Puntos Totales", value=int((stats_jugador['Goles_Campo'] * 3) + stats_jugador['Puntos_Extra']))
 
                 st.divider()
 
