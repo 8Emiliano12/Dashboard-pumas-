@@ -56,7 +56,7 @@ if 'df' not in st.session_state:
         'Yardas_Producidas_Partidos': [0]*15,
         'Tackleadas_Efectivas_Partidos': [0]*15,
         'Intercepciones_Partidos': [0]*15,
-        'Bloqueos_Dominio_Partidos': [0]*15, # Nombre profesional para pancakes
+        'Bloqueos_Dominio_Partidos': [0]*15,
         'Capturas_Permitidas_Partidos': [0]*15,
         'Capturas_QB_Sacks_Partidos': [0]*15,
         'Goles_Campo_Partidos': [0]*15,
@@ -158,14 +158,14 @@ with tab4:
     with col_filtro2:
         jornada_seleccionada = st.selectbox("Selecciona la Jornada", [
             "J1 - Leones Anáhuac (Visita)", 
-            "J2 - Burros Blancos (Local)", 
-            "J3 - ITESM Puebla (Visita)", 
+            "J2 - Burros Blancos (Local - EOU)", 
+            "J3 - ITESM Puebla (Local - EOU)", 
             "J4 - ITESM Mty (Local)", 
-            "J5 - ITESM CEM (Visita)", 
+            "J5 - ITESM CEM (Local - EOU)", 
             "J6 - Linces UVM (Visita)", 
-            "J7 - Águilas Blancas (Local)", 
+            "J7 - Águilas Blancas (Local - EOU)", 
             "J8 - Aztecas UDLAP (Local)", 
-            "J9 - Leones UAC (Local)", 
+            "J9 - Leones UAC (Local - EOU)", 
             "Entrenamiento Semanal Regular"
         ])
     with col_filtro3:
@@ -296,16 +296,27 @@ with tab4:
                 
                 st.success(f"✅ ¡{tipo_encuesta} guardada para {jugador_seleccionado}!")
 
-# --- PESTAÑA 5: CALENDARIO Y PLANIFICACIÓN SEMANAL ---
+# --- PESTAÑA 5: CALENDARIO Y PLANIFICACIÓN SEMANAL ACTUALIZADO ---
 with tab5:
     st.header("📅 Calendario Oficial ONEFA 2026 y Planificación Psicológica")
-    st.write("Consulta las fechas de la temporada y el programa estratégico para la aplicación de encuestas de bienestar.")
+    st.write("Consulta las fechas de la temporada, sedes actualizadas (Estadio Olímpico Universitario - EOU) y el programa de evaluaciones.")
     
     df_calendario = pd.DataFrame({
         'Jornada': ['J1', 'J2', 'J3', 'J4', 'J5', 'J6', 'J7', 'J8', 'J9', 'J10'],
         'Fecha': ['4 Sep', '12 Sep', '18 Sep', '25 Sep', '3 Oct', '9 Oct', '17 Oct', '24 Oct', '30 Oct', 'Noviembre'],
         'Rival': ['Leones Anáhuac', 'Burros Blancos', 'ITESM Puebla', 'ITESM Mty', 'ITESM CEM', 'Linces UVM', 'Águilas Blancas', 'Aztecas UDLAP', 'Leones UAC', 'BYE (Descanso)'],
-        'Sede / Condición': ['Visita (Cueva del León)', 'Local (EFO)', 'Visita (EFO)', 'Local (Borregos)', 'Visita (EFO)', 'Visita (JOM)', 'Local (EFO)', 'Local (Templo del Dolor)', 'Local (UAC)', 'Descanso'],
+        'Sede / Condición': [
+            'Visita (Cueva del León)', 
+            'Local (EOU)', 
+            'Local (EOU)', 
+            'Local (Borregos)', 
+            'Local (EOU)', 
+            'Visita (JOM)', 
+            'Local (EOU)', 
+            'Local (Templo del Dolor)', 
+            'Local (EOU)', 
+            'Descanso'
+        ],
         'Evaluaciones Clave': [
             'Mié (Fatiga/Dolor) & Vie (Ansiedad/Confianza)', 
             'Mié & Vie', 'Mié & Vie', 'Mié & Vie', 'Mié & Vie', 
