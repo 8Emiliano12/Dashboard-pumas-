@@ -30,7 +30,7 @@ if not check_password():
 # ==========================================
 st.title("Panel de Control: Rendimiento y Bienestar - Pumas CU")
 
-# 1. Base de datos inicial con métricas psicológicas específicas por momento
+# 1. Base de datos inicial con separación estricta de variables psicológicas
 if 'df' not in st.session_state:
     datos_iniciales = {
         'Jersey': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 73, 87],
@@ -69,12 +69,12 @@ if 'df' not in st.session_state:
         'Sacks_Permitidos_Entrenamientos': [0]*15,
         'Sacks_QB_Entrenamientos': [0]*15,
         
-        # --- BLOQUE PSICOLÓGICO 1: MITAD DE SEMANA (ENTRENOS) ---
+        # --- BLOQUE 1: MITAD DE SEMANA (ENTRENOS) ---
         'Fatiga_Entreno': [4]*15,
         'Dolor_Muscular': [3]*15,
         'Recuperacion_Entreno': [7]*15,
         
-        # --- BLOQUE PSICOLÓGICO 2: PRE-PARTIDO (MATCHDAY) ---
+        # --- BLOQUE 2: PRE-PARTIDO (MATCHDAY) ---
         'Ansiedad_Competitiva': [5]*15,
         'Confianza_Tactica': [8]*15,
         'Sueno_Prepartido': [7]*15,
@@ -187,16 +187,25 @@ with tab4:
             
             st.write("---")
             
+            # Inicializamos variables locales limpias para evitar cruces
+            fatiga_entreno_val = int(st.session_state.df.at[idx, 'Fatiga_Entreno'])
+            dolor_muscular_val = int(st.session_state.df.at[idx, 'Dolor_Muscular'])
+            recuperacion_val = int(st.session_state.df.at[idx, 'Recuperacion_Entreno'])
+            
+            ansiedad_val = int(st.session_state.df.at[idx, 'Ansiedad_Competitiva'])
+            confianza_val = int(st.session_state.df.at[idx, 'Confianza_Tactica'])
+            sueno_pre_val = int(st.session_state.df.at[idx, 'Sueno_Prepartido'])
+
             if tipo_encuesta == "Evaluación de Mitad de Semana (Entrenamiento)":
                 st.markdown("#### 🏋️ Factores de Carga y Fatiga en Entrenamientos")
-                fatiga_entreno_nueva = st.slider("Fatiga Física Acumulada (1-10)", 1, 10, int(st.session_state.df.at[idx, 'Fatiga_Entreno']))
-                dolor_muscular_nuevo = st.slider("Dolor Muscular / Molestias Menores (1-10)", 1, 10, int(st.session_state.df.at[idx, 'Dolor_Muscular']))
-                recuperacion_nueva = st.slider("Nivel de Recuperación / Frescura (1-10)", 1, 10, int(st.session_state.df.at[idx, 'Recuperacion_Entreno']))
+                fatiga_entreno_nueva = st.slider("Fatiga Física Acumulada (1-10)", 1, 10, fatiga_entreno_val)
+                dolor_muscular_nuevo = st.slider("Dolor Muscular / Molestias Menores (1-10)", 1, 10, dolor_muscular_val)
+                recuperacion_nueva = st.slider("Nivel de Recuperación / Frescura (1-10)", 1, 10, recuperacion_val)
             else:
                 st.markdown("#### 🏟️ Factores Psicológicos y de Activación Pre-partido")
-                ansiedad_nueva = st.slider("Nivel de Ansiedad / Activación Competitiva (1-10)", 1, 10, int(st.session_state.df.at[idx, 'Ansiedad_Competitiva']))
-                confianza_nueva = st.slider("Confianza en el Plan de Juego (1-10)", 1, 10, int(st.session_state.df.at[idx, 'Confianza_Tactica']))
-                sueno_previo_nuevo = st.slider("Horas de Sueño Noche Previa (Matchday)", 1, 12, int(st.session_state.df.at[idx, 'Sueno_Prepartido']))
+                ansiedad_nueva = st.slider("Nivel de Ansiedad / Activación Competitiva (1-10)", 1, 10, ansiedad_val)
+                confianza_nueva = st.slider("Confianza en el Plan de Juego (1-10)", 1, 10, confianza_val)
+                sueno_previo_nuevo = st.slider("Horas de Sueño Noche Previa (Matchday)", 1, 12, sueno_pre_val)
             
             asistencia_entreno = st.selectbox("Asistencia a la sesión", ["Asistió", "No Asistió"])
             nuevo_estatus = st.selectbox("Estatus Médico / Disponibilidad", ["Activo", "Precaución Médica", "Lesionado / Inactivo"], index=["Activo", "Precaución Médica", "Lesionado / Inactivo"].index(st.session_state.df.at[idx, 'Estatus_Medico']) if st.session_state.df.at[idx, 'Estatus_Medico'] in ["Activo", "Precaución Médica", "Lesionado / Inactivo"] else 0)
@@ -289,7 +298,7 @@ with tab3:
         label="📥 Descargar Reporte en CSV",
         data=csv_data,
         file_name='reporte_semanal_pumas_cu.csv',
-        mime='text/css',
+        mime='text/csv',
     )
 
 # --- PESTAÑA 2: BASE DE DATOS Y EDICIÓN ---
@@ -333,7 +342,7 @@ with tab1:
                 ansiedad = stats_jugador['Ansiedad_Competitiva']
                 sueno_pre = stats_jugador['Sueno_Prepartido']
                 
-                # Fórmula de riesgo ajustada con variables psicológicas reales
+                # Fórmula de riesgo basada en fatiga y ansiedad pre-partido
                 factor_sueno_inv = max(0, (10 - sueno_pre))
                 indice_riesgo = (fatiga_entreno * 0.4) + (ansiedad * 0.4) + (factor_sueno_inv * 0.2)
 
