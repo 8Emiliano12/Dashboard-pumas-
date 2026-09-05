@@ -97,7 +97,7 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs([
     "📅 Calendario"
 ])
 
-# --- PESTAÑA 4: REGISTRO DE DATOS EN VIVO (CON CONTEXTO DE ENTRENAMIENTO / JORNADA) ---
+# --- PESTAÑA 4: REGISTRO DE DATOS EN VIVO ---
 with tab4:
     st.header("Registro de Datos y Mesa Táctil en Vivo")
     st.write("Selecciona si la actividad actual es un entrenamiento o partido oficial, elige la jornada y registra las acciones del jugador.")
@@ -164,17 +164,23 @@ with tab4:
         with col_ex2:
             pos_exprs = st.selectbox("Posición", ["QB", "RB", "WR", "OL", "DL", "LB", "DB", "K", "P"], key="pos_exprs_box")
             
+        # Determinar unidad en base a la posición elegida
+        unidad_asignada = "Ofensiva" if pos_exprs in ["QB", "RB", "WR", "OL"] else ("Defensiva" if pos_exprs in ["DL", "LB", "DB"] else "Equipos Especiales")
+
         match_jersey = st.session_state.df[st.session_state.df['Jersey'] == int(jersey_exprs)]
         
         if not match_jersey.empty:
             idx_live = match_jersey.index[0]
             jugador_live = st.session_state.df.at[idx_live, 'Jugador']
-            pos_live = st.session_state.df.at[idx_live, 'Posición']
-            st.info(f"Atendiendo a: **{jugador_live}** (#{jersey_exprs} - {pos_live})")
+            
+            # FORZAR LA ACTUALIZACIÓN DE POSICIÓN Y UNIDAD SELECCIONADA
+            st.session_state.df.at[idx_live, 'Posición'] = pos_exprs
+            st.session_state.df.at[idx_live, 'Unidad'] = unidad_asignada
+            
+            pos_live = pos_exprs
+            st.info(f"Atendiendo a: **{jugador_live}** (#{jersey_exprs} - Posición actualizada a: **{pos_live}**)")
         else:
             nombre_provisional = f"Jugador #{int(jersey_exprs)}"
-            unidad_asignada = "Ofensiva" if pos_exprs in ["QB", "RB", "WR", "OL"] else ("Defensiva" if pos_exprs in ["DL", "LB", "DB"] else "Equipos Especiales")
-            
             nuevo_registro = {
                 'Jersey': int(jersey_exprs), 'Jugador': nombre_provisional, 'Posición': pos_exprs, 'Unidad': unidad_asignada,
                 'Estatus_Medico': 'Activo', 'Entrenos_Programados': 1, 'Entrenos_Asistidos': 1, 'Partidos_Programados': 1, 'Partidos_Convocados': 1,
@@ -192,7 +198,7 @@ with tab4:
             idx_live = st.session_state.df.index[-1]
             jugador_live = nombre_provisional
             pos_live = pos_exprs
-            st.success(f"Perfil provisional creado para Jersey #{jersey_exprs}. Puedes renombrarlo en la pestaña 'Base de Datos'.")
+            st.success(f"Perfil provisional creado para Jersey #{jersey_exprs} ({pos_live}).")
 
     if idx_live is not None and jugador_live:
         st.divider()
