@@ -81,15 +81,15 @@ if 'df' not in st.session_state:
 
 tab1, tab2, tab3, tab4 = st.tabs(["📊 Análisis Individual", "⚙️ Base de Datos", "📈 Rendimiento Equipo", "📝 Registro Diario"])
 
-# --- PESTAÑA 4: REGISTRO DIARIO CON SEDE (LOCAL / VISITA) ---
+# --- PESTAÑA 4: REGISTRO DIARIO (DIVIDIDO EN DOS MÓDULOS) ---
 with tab4:
-    st.header("Captura de Entrenamientos y Partidos")
+    st.header("Captura de Datos Operativos")
     
     col_filtro1, col_filtro2, col_filtro3 = st.columns(3)
     with col_filtro1:
-        tipo_evento = st.selectbox("1. Tipo de Registro", ["Entrenamiento", "Partido"])
+        tipo_registro_principal = st.selectbox("¿Qué deseas registrar?", ["Estadísticas de Partido", "Monitoreo Psicodeportivo y Bienestar"])
     with col_filtro2:
-        unidad_registro = st.selectbox("2. Selecciona la Unidad", st.session_state.df['Unidad'].unique(), key="unidad_reg")
+        unidad_registro = st.selectbox("Selecciona la Unidad", st.session_state.df['Unidad'].unique(), key="unidad_reg")
     
     jugadores_filtrados = st.session_state.df[st.session_state.df['Unidad'] == unidad_registro]['Jugador'].tolist()
     
@@ -98,42 +98,30 @@ with tab4:
         return f"{nombre_jugador} ({pos})"
     
     with col_filtro3:
-        jugador_seleccionado = st.selectbox("3. Selecciona al Jugador", jugadores_filtrados, format_func=mostrar_nombre_con_posicion, key="jugador_reg")
+        jugador_seleccionado = st.selectbox("Selecciona al Jugador", jugadores_filtrados, format_func=mostrar_nombre_con_posicion, key="jugador_reg")
     
     idx = st.session_state.df.index[st.session_state.df['Jugador'] == jugador_seleccionado].tolist()[0]
     pos_actual = st.session_state.df.at[idx, 'Posición']
     
-    with st.form("registro_diario_form"):
-        # Selector condicional de sede si es partido
-        if tipo_evento == "Partido":
-            sede_partido = st.radio("Sede del Encuentro:", ["Local (CU)", "Visita"], horizontal=True)
-            st.info(f"Registrando **Partido de {sede_partido}** para **{jugador_seleccionado}** ({pos_actual})")
-        else:
-            st.info(f"Registrando **Entrenamiento** para **{jugador_seleccionado}** ({pos_actual})")
-        
-        col_a, col_b = st.columns(2)
-        
-        with col_a:
-            st.subheader("Estado Psicodeportivo y Participación")
-            carga_nueva = st.slider("Carga Mental / Estrés (1-10)", 1, 10, int(st.session_state.df.at[idx, 'Carga_Mental_Actual']))
-            sueno_nuevo = st.slider("Horas de Sueño", 1, 12, int(st.session_state.df.at[idx, 'Sueno_Actual']))
-            fatiga_nueva = st.slider("Nivel de Fatiga Física (1-10)", 1, 10, int(st.session_state.df.at[idx, 'Fatiga_Actual']))
-            
-            if tipo_evento == "Entrenamiento":
-                asistencia_opcion = st.selectbox("Asistencia al Entrenamiento", ["Asistió", "No Asistió"])
-            else:
-                asistencia_opcion = st.selectbox("Estatus en el Partido", ["Jugó (Convocado con acción)", "Inactivo / No Convocado"])
-            
-            nuevo_estatus = st.selectbox("Estatus Médico / Disponibilidad", ["Activo", "Precaución Médica", "Lesionado / Inactivo"], index=["Activo", "Precaución Médica", "Lesionado / Inactivo"].index(st.session_state.df.at[idx, 'Estatus_Medico']) if st.session_state.df.at[idx, 'Estatus_Medico'] in ["Activo", "Precaución Médica", "Lesionado / Inactivo"] else 0)
+    st.divider()
 
-        with col_b:
-            st.subheader("Rendimiento Registrado")
+    # --- CASO 1: REGISTRO DE PARTIDO ---
+    if tipo_registro_principal == "Estadísticas de Partido":
+        st.subheader(f"🏟️ Registro de Partido para: {jugador_seleccionado} ({pos_actual})")
+        
+        with st.form("form_partido"):
+            sede_partido = st.radio("Sede del Encuentro:", ["Local (CU)", "Visita"], horizontal=True)
+            convocatoria_partido = st.selectbox("Estatus en el Partido", ["Jugó (Convocado con acción)", "Inactivo / No Convocado"])
+            
+            st.write("---")
+            st.subheader("Rendimiento en el Emparrillado")
+            
             n_yardas, n_tackleadas, n_intercepciones = 0, 0, 0
             n_pancakes, n_sacks_perm, n_sacks_qb = 0, 0, 0
             n_gc, n_pe = 0, 0
             
             if pos_actual in ['QB', 'WR', 'RB']:
-                n_yardas = st.number_input("Yardas Producidas", min_value=0, value=0)
+                n_yardas = st.number_input("Yardas Producidas en el Partido", min_value=0, value=0)
             elif pos_actual == 'OL':
                 n_pancakes = st.number_input("Bloqueos Efectivos (Pancakes)", min_value=0, value=0)
                 n_sacks_perm = st.number_input("Capturas Permitidas (Sacks)", min_value=0, value=0)
@@ -146,30 +134,14 @@ with tab4:
             elif pos_actual in ['K', 'P']:
                 n_gc = st.number_input("Goles de Campo Anotados", min_value=0, value=0)
                 n_pe = st.number_input("Puntos Extra Anotados (PATs)", min_value=0, value=0)
-        
-        submitted = st.form_submit_button("Guardar Registro")
-        
-        if submitted:
-            if tipo_evento == "Entrenamiento":
-                st.session_state.df.at[idx, 'Entrenos_Programados'] += 1
-                if asistencia_opcion == "Asistió":
-                    st.session_state.df.at[idx, 'Entrenos_Asistidos'] += 1
-            else:
+            
+            submitted_partido = st.form_submit_button("Guardar Estadísticas de Partido")
+            
+            if submitted_partido:
                 st.session_state.df.at[idx, 'Partidos_Programados'] += 1
-                if asistencia_opcion == "Jugó (Convocado con acción)":
+                if convocatoria_partido == "Jugó (Convocado con acción)":
                     st.session_state.df.at[idx, 'Partidos_Convocados'] += 1
-
-            st.session_state.df.at[idx, 'Estatus_Medico'] = nuevo_estatus
-            st.session_state.df.at[idx, 'Carga_Mental_Actual'] = carga_nueva
-            st.session_state.df.at[idx, 'Sueno_Actual'] = sueno_nuevo
-            st.session_state.df.at[idx, 'Fatiga_Actual'] = fatiga_nueva
-            
-            hist_fatiga = st.session_state.df.at[idx, 'Historial_Fatiga']
-            hist_fatiga.append(fatiga_nueva)
-            if len(hist_fatiga) > 5: hist_fatiga.pop(0)
-            st.session_state.df.at[idx, 'Historial_Fatiga'] = hist_fatiga
-            
-            if tipo_evento == "Partido":
+                
                 st.session_state.df.at[idx, 'Yardas_Partidos'] += n_yardas
                 st.session_state.df.at[idx, 'Tackleadas_Partidos'] += n_tackleadas
                 st.session_state.df.at[idx, 'Intercepciones_Partidos'] += n_intercepciones
@@ -184,15 +156,42 @@ with tab4:
                 hist_rend.append(val_juego)
                 if len(hist_rend) > 5: hist_rend.pop(0)
                 st.session_state.df.at[idx, 'Historial_Rendimiento_Juego'] = hist_rend
-            else:
-                st.session_state.df.at[idx, 'Yardas_Entrenamientos'] += n_yardas
-                st.session_state.df.at[idx, 'Tackleadas_Entrenamientos'] += n_tackleadas
-                st.session_state.df.at[idx, 'Intercepciones_Entrenamientos'] += n_intercepciones
-                st.session_state.df.at[idx, 'Pancakes_Entrenamientos'] += n_pancakes
-                st.session_state.df.at[idx, 'Sacks_Permitidos_Entrenamientos'] += n_sacks_perm
-                st.session_state.df.at[idx, 'Sacks_QB_Entrenamientos'] += n_sacks_qb
+                
+                st.success(f"✅ ¡Estadísticas de partido ({sede_partido}) guardadas para {jugador_seleccionado}!")
+
+    # --- CASO 2: REGISTRO PSICODEPORTIVO Y BIENESTAR ---
+    else:
+        st.subheader(f"🧠 Monitoreo Psicodeportivo para: {jugador_seleccionado} ({pos_actual})")
+        
+        with st.form("form_psico"):
+            tipo_sesion = st.selectbox("Contexto de la evaluación", ["Entrenamiento Semanal", "Evaluación General / Post-Partido"])
             
-            st.success(f"✅ ¡Registro guardado para {jugador_seleccionado}!")
+            carga_nueva = st.slider("Carga Mental / Estrés (1-10)", 1, 10, int(st.session_state.df.at[idx, 'Carga_Mental_Actual']))
+            sueno_nuevo = st.slider("Horas de Sueño", 1, 12, int(st.session_state.df.at[idx, 'Sueno_Actual']))
+            fatiga_nueva = st.slider("Nivel de Fatiga Física (1-10)", 1, 10, int(st.session_state.df.at[idx, 'Fatiga_Actual']))
+            
+            asistencia_entreno = st.selectbox("Asistencia a la sesión", ["Asistió", "No Asistió"])
+            nuevo_estatus = st.selectbox("Estatus Médico / Disponibilidad", ["Activo", "Precaución Médica", "Lesionado / Inactivo"], index=["Activo", "Precaución Médica", "Lesionado / Inactivo"].index(st.session_state.df.at[idx, 'Estatus_Medico']) if st.session_state.df.at[idx, 'Estatus_Medico'] in ["Activo", "Precaución Médica", "Lesionado / Inactivo"] else 0)
+            
+            submitted_psico = st.form_submit_button("Guardar Datos Psicodeportivos")
+            
+            if submitted_psico:
+                if tipo_sesion == "Entrenamiento Semanal":
+                    st.session_state.df.at[idx, 'Entrenos_Programados'] += 1
+                    if asistencia_entreno == "Asistió":
+                        st.session_state.df.at[idx, 'Entrenos_Asistidos'] += 1
+                
+                st.session_state.df.at[idx, 'Estatus_Medico'] = nuevo_estatus
+                st.session_state.df.at[idx, 'Carga_Mental_Actual'] = carga_nueva
+                st.session_state.df.at[idx, 'Sueno_Actual'] = sueno_nuevo
+                st.session_state.df.at[idx, 'Fatiga_Actual'] = fatiga_nueva
+                
+                hist_fatiga = st.session_state.df.at[idx, 'Historial_Fatiga']
+                hist_fatiga.append(fatiga_nueva)
+                if len(hist_fatiga) > 5: hist_fatiga.pop(0)
+                st.session_state.df.at[idx, 'Historial_Fatiga'] = hist_fatiga
+                
+                st.success(f"✅ ¡Datos psicodeportivos guardados para {jugador_seleccionado}!")
 
 # --- PESTAÑA 3: RENDIMIENTO DEL EQUIPO Y GRÁFICAS ---
 with tab3:
