@@ -103,7 +103,7 @@ with tab4:
     pos_actual = st.session_state.df.at[idx, 'Posición']
     
     with st.form("registro_diario_form"):
-        st.info(Registrando actividad tipo: **{tipo_evento}** para **{jugador_seleccionado}** ({pos_actual}))
+        st.info(f"Registrando actividad tipo: **{tipo_evento}** para **{jugador_seleccionado}** ({pos_actual})")
         
         col_a, col_b = st.columns(2)
         
@@ -201,7 +201,7 @@ with tab2:
         st.session_state.df = df_editado
         st.success("¡Base de datos actualizada correctamente!")
 
-# --- PESTAÑA 1: ANÁLISIS DEL COACH (CON DESGLOSE Y PROYECCIONES) ---
+# --- PESTAÑA 1: ANÁLISIS DEL COACH ---
 with tab1:
     df = st.session_state.df.copy()
     
@@ -278,7 +278,6 @@ with tab1:
                     st.write(f"**Sueño:** {stats_jugador['Sueño_Entreno']} hrs")
                     st.write(f"**Fatiga:** {stats_jugador['Fatiga_Entreno']}/10")
 
-                # Alertas basadas en fatiga de partido
                 if stats_jugador['Carga_Mental_Partido'] >= 8 or stats_jugador['Fatiga_Partido'] >= 8:
                     st.error("🚨 ALERTA: Altos niveles de desgaste detectados en días de partido.")
                 else:
