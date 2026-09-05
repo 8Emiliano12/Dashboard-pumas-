@@ -2,9 +2,35 @@ import streamlit as st
 import pandas as pd
 
 st.set_page_config(page_title="Dashboard Pumas CU", layout="wide")
+
+# --- SISTEMA DE SEGURIDAD (LOGIN) ---
+def check_password():
+    """Devuelve True si el usuario ingresa la contraseña correcta."""
+    def password_entered():
+        if st.session_state["password"] == "Pumas2026":
+            st.session_state["password_correct"] = True
+            del st.session_state["password"]
+        else:
+            st.session_state["password_correct"] = False
+
+    if "password_correct" not in st.session_state:
+        st.text_input("Ingresa la contraseña del equipo para acceder:", type="password", on_change=password_entered, key="password")
+        return False
+    elif not st.session_state["password_correct"]:
+        st.text_input("Ingresa la contraseña del equipo para acceder:", type="password", on_change=password_entered, key="password")
+        st.error("🛑 Contraseña incorrecta. Acceso denegado.")
+        return False
+    return True
+
+if not check_password():
+    st.stop()
+
+# ==========================================
+# CÓDIGO PRINCIPAL DEL DASHBOARD
+# ==========================================
 st.title("Panel de Control: Rendimiento y Bienestar - Pumas CU")
 
-# 1. Base de datos
+# 1. Base de datos inicial
 if 'df' not in st.session_state:
     datos_iniciales = {
         'Jersey': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 73, 87],
@@ -17,6 +43,7 @@ if 'df' not in st.session_state:
         ],
         'Posición': ['DL', 'WR', 'DB', 'QB', 'LB', 'DB', 'LB', 'DB', 'DB', 'DL', 'QB', 'DL', 'WR', 'OL', 'K'],
         'Unidad': ['Defensiva', 'Ofensiva', 'Defensiva', 'Ofensiva', 'Defensiva', 'Defensiva', 'Defensiva', 'Defensiva', 'Defensiva', 'Defensiva', 'Ofensiva', 'Defensiva', 'Ofensiva', 'Ofensiva', 'Equipos Especiales'],
+        'Partidos_Jugados': [1]*15, # Base para calcular promedios por partido
         'Targets_Intentos': [0]*15,
         'Completos_Recepciones': [0]*15,
         'Yardas_Totales': [0]*15,
@@ -35,7 +62,7 @@ if 'df' not in st.session_state:
 
 tab1, tab2, tab3, tab4 = st.tabs(["📊 Análisis Individual", "⚙️ Base de Datos", "📈 Rendimiento Equipo", "📝 Registro Diario"])
 
-# --- PESTAÑA 4: REGISTRO DIARIO (NOMBRES CON POSICIÓN) ---
+# --- PESTAÑA 4: REGISTRO DIARIO ---
 with tab4:
     st.header("Captura de Entrenamientos y Partidos")
     
@@ -45,18 +72,12 @@ with tab4:
     
     jugadores_filtrados = st.session_state.df[st.session_state.df['Unidad'] == unidad_registro]['Jugador'].tolist()
     
-    # Función para formatear visualmente el nombre en el desplegable
     def mostrar_nombre_con_posicion(nombre_jugador):
         pos = st.session_state.df[st.session_state.df['Jugador'] == nombre_jugador]['Posición'].values[0]
         return f"{nombre_jugador} ({pos})"
     
     with col_filtro2:
-        jugador_seleccionado = st.selectbox(
-            "2. Selecciona al Jugador", 
-            jugadores_filtrados, 
-            format_func=mostrar_nombre_con_posicion, # Aquí aplicamos el truco visual
-            key="jugador_reg"
-        )
+        jugador_seleccionado = st.selectbox("2. Selecciona al Jugador", jugadores_filtrados, format_func=mostrar_nombre_con_posicion, key="jugador_reg")
     
     idx = st.session_state.df.index[st.session_state.df['Jugador'] == jugador_seleccionado].tolist()[0]
     pos_actual = st.session_state.df.at[idx, 'Posición']
@@ -71,7 +92,7 @@ with tab4:
             fatiga_nueva = st.slider("Nivel de Fatiga Física (1-10)", 1, 10, 5)
 
         with col_b:
-            st.subheader("Rendimiento en Campo")
+            st.subheader("Rendimiento en Campo (Este Juego)")
             st.write(f"*(Métricas adaptadas para: **{pos_actual}**)*")
             
             n_intentos, n_completos, n_yardas = 0, 0, 0
@@ -99,6 +120,9 @@ with tab4:
         submitted = st.form_submit_button("Guardar Registro del Día")
         
         if submitted:
+            # Incrementar partidos jugados en 1 cada vez que se registran stats de juego
+            st.session_state.df.at[idx, 'Partidos_Jugados'] += 1
+            
             st.session_state.df.at[idx, 'Targets_Intentos'] += n_intentos
             st.session_state.df.at[idx, 'Completos_Recepciones'] += n_completos
             st.session_state.df.at[idx, 'Yardas_Totales'] += n_yardas
@@ -148,13 +172,21 @@ with tab2:
         st.session_state.df = df_editado
         st.success("¡Base de datos actualizada correctamente!")
 
-# --- PESTAÑA 1: ANÁLISIS DEL COACH ---
+# --- PESTAÑA 1: ANÁLISIS DEL COACH (CON PROYECCIONES NFL) ---
 with tab1:
     df = st.session_state.df.copy()
-    df['Targets_Intentos_Calc'] = df['Targets_Intentos'].replace(0, 1) 
-    df['Efectividad (%)'] = (df['Completos_Recepciones'] / df['Targets_Intentos_Calc']) * 100
-    df['Eficiencia (Yds/Intento)'] = df['Yardas_Totales'] / df['Targets_Intentos_Calc']
-    df['Proyeccion_Yardas'] = df['Eficiencia (Yds/Intento)'] * 10
+    
+    # Evitar división por cero en partidos jugados
+    df['PJ_Calc'] = df['Partidos_Jugados'].replace(0, 1)
+    df['Targets_Calc'] = df['Targets_Intentos'].replace(0, 1)
+    
+    # Cálculos y Proyecciones estilo Next Gen Stats
+    df['Efectividad (%)'] = (df['Completos_Recepciones'] / df['Targets_Calc']) * 100
+    
+    # Proyecciones a ritmo de temporada completa (estimando 10 juegos totales)
+    df['Proyeccion_Yardas_Temp'] = (df['Yardas_Totales'] / df['PJ_Calc']) * 10
+    df['Proyeccion_Tackles_Temp'] = (df['Tackleadas'] / df['PJ_Calc']) * 10
+    df['Proyeccion_Sacks_Temp'] = (df['Capturas_QB'] / df['PJ_Calc']) * 10
 
     st.subheader("Filtros de Búsqueda")
     if not df.empty:
@@ -181,32 +213,60 @@ with tab1:
                 st.divider()
                 st.header(f"Análisis de: {jugador_filtro} - #{stats_jugador['Jersey']} ({pos})")
                 
-                st.subheader("Métricas Deportivas")
+                st.subheader("📊 Métricas Reales y Proyecciones (Estilo NFL)")
                 col1, col2, col3 = st.columns(3)
                 
                 if pos in ['QB', 'WR', 'RB']:
-                    with col1: st.metric(label="Efectividad", value=f"{stats_jugador['Efectividad (%)']:.1f}%")
-                    with col2: st.metric(label="Yardas Reales", value=int(stats_jugador['Yardas_Totales']))
-                    with col3: st.metric(label="Proyección de Yardas", value=int(stats_jugador['Proyeccion_Yardas']))
+                    with col1: 
+                        st.metric(label="Yardas Reales", value=int(stats_jugador['Yardas_Totales']))
+                    with col2: 
+                        st.metric(label="Promedio por Partido", value=f"{stats_jugador['Yardas_Totales'] / stats_jugador['PJ_Calc']:.1f} yds")
+                    with col3: 
+                        st.metric(label="Proyección Temporada (10 J)", value=int(stats_jugador['Proyeccion_Yardas_Temp']), delta="Ritmo Estimado")
+                
                 elif pos == 'OL':
-                    with col1: st.metric(label="Bloqueos Efectivos (Pancakes)", value=int(stats_jugador['Bloqueos_Efectivos']))
-                    with col2: st.metric(label="Capturas Permitidas", value=int(stats_jugador['Capturas_Permitidas']))
+                    with col1: 
+                        st.metric(label="Bloqueos Efectivos (Pancakes)", value=int(stats_jugador['Bloqueos_Efectivos']))
+                    with col2: 
+                        st.metric(label="Capturas Permitidas (Sacks)", value=int(stats_jugador['Capturas_Permitidas']))
+                    with col3: 
+                        eficiencia_ol = "Óptima" if stats_jugador['Capturas_Permitidas'] == 0 else "Revisar Cobertura"
+                        st.metric(label="Calificación de Protección", value=eficiencia_ol)
+                
                 elif pos in ['DL', 'LB']:
-                    with col1: st.metric(label="Tackleadas", value=int(stats_jugador['Tackleadas']))
-                    with col2: st.metric(label="Capturas al QB (Sacks)", value=int(stats_jugador['Capturas_QB']))
+                    with col1: 
+                        st.metric(label="Tackleadas Totales", value=int(stats_jugador['Tackleadas']))
+                    with col2: 
+                        st.metric(label="Capturas al QB (Sacks)", value=int(stats_jugador['Capturas_QB']))
+                    with col3: 
+                        st.metric(label="Proyección de Tackleadas (10 J)", value=int(stats_jugador['Proyeccion_Tackles_Temp']), delta="Ritmo Estimado")
+                
                 elif pos == 'DB':
-                    with col1: st.metric(label="Tackleadas", value=int(stats_jugador['Tackleadas']))
-                    with col2: st.metric(label="Intercepciones", value=int(stats_jugador['Intercepciones']))
+                    with col1: 
+                        st.metric(label="Tackleadas", value=int(stats_jugador['Tackleadas']))
+                    with col2: 
+                        st.metric(label="Intercepciones", value=int(stats_jugador['Intercepciones']))
+                    with col3: 
+                        st.metric(label="Proyección de Intercepciones", value=f"{stats_jugador['Intercepciones'] / stats_jugador['PJ_Calc'] * 10:.1f}")
+                
                 elif pos in ['K', 'P']:
-                    with col1: st.metric(label="Goles de Campo", value=int(stats_jugador['Goles_Campo']))
-                    with col2: st.metric(label="Puntos Extra (PATs)", value=int(stats_jugador['Puntos_Extra']))
-                    with col3: st.metric(label="Puntos Totales", value=int((stats_jugador['Goles_Campo'] * 3) + stats_jugador['Puntos_Extra']))
+                    with col1: 
+                        st.metric(label="Goles de Campo", value=int(stats_jugador['Goles_Campo']))
+                    with col2: 
+                        st.metric(label="Puntos Extra (PATs)", value=int(stats_jugador['Puntos_Extra']))
+                    with col3: 
+                        st.metric(label="Puntos Totales", value=int((stats_jugador['Goles_Campo'] * 3) + stats_jugador['Puntos_Extra']))
 
                 st.divider()
 
-                st.subheader("Monitoreo Psicodeportivo")
+                st.subheader("🧠 Monitoreo Psicodeportivo")
                 col4, col5, col6 = st.columns(3)
                 with col4: st.write(f"**Carga Mental:** {stats_jugador['Carga_Mental_Semanal']}/10")
                 with col5: st.write(f"**Calidad de Sueño:** {stats_jugador['Calidad_Sueno']} horas")
-                with col6: st.write(f"**Fatiga:** {stats_jugador['Fatiga_Traslado']}/10")
-                
+                with col6: st.write(f"**Fatiga Física:** {stats_jugador['Fatiga_Traslado']}/10")
+
+                # Alertas inteligentes cruzadas con fatiga y rendimiento
+                if stats_jugador['Carga_Mental_Semanal'] >= 8 or stats_jugador['Fatiga_Traslado'] >= 8:
+                    st.error("🚨 ALERTA PSICOLÓGICA: Atleta con índices elevados de fatiga o carga mental. Se sugiere intervención de descanso.")
+                else:
+                    st.success("✅ Estabilidad psico-física en rangos óptimos para competencia.")
