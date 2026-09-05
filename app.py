@@ -88,63 +88,67 @@ if 'df' not in st.session_state:
     }
     st.session_state.df = pd.DataFrame(datos_iniciales)
 
-# Pestañas de la aplicación
+# Pestañas de la aplicación (Sin mención a NCAA)
 tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
     "📊 Análisis Individual", 
     "⚙️ Base de Datos", 
-    "📈 Box Score (NCAA)", 
+    "📈 Box Score Oficial", 
     "⚡ Mesa de Anotación (Live)", 
     "📝 Registro Diario", 
     "📅 Calendario"
 ])
 
-# --- PESTAÑA 4: MESA DE ANOTACIÓN EN VIVO (LIVE SCORING CON JERSEY EXPRÉS) ---
-with tab6:
-    st.header("⚡ Mesa de Anotación Táctil en Vivo (Modo Exprés por Jersey)")
-    st.write("Si un jugador destaca en la jugada y no está registrado, introduce su número de jersey y se creará al vuelo.")
+# --- PESTAÑA 4: MESA DE ANOTACIÓN EN VIVO (LIVE SCORING CORREGIDO) ---
+with tab4:
+    st.header("⚡ Mesa de Anotación Táctil en Vivo")
+    st.write("Selecciona al jugador por su unidad o captura su número de jersey exprés para registrar acciones jugada a jugada.")
 
-    col_l1, col_l2, col_l3 = st.columns(3)
-    
-    with col_l1:
-        modo_ingreso = st.radio("Método de Selección:", ["Seleccionar del Roster", "Capturar por Número de Jersey (Exprés)"], horizontal=True)
+    tipo_seleccion_mesa = st.radio("Método de captura:", ["Lista del Roster", "Número de Jersey Exprés"], horizontal=True, key="tipo_mesa_sel")
 
-    if modo_ingreso == "Seleccionar del Roster":
-        with col_l2:
-            unidad_live = st.selectbox("Unidad", st.session_state.df['Unidad'].unique(), key="live_unidad")
+    idx_live = None
+    jugador_live = None
+    pos_live = None
+
+    if tipo_seleccion_mesa == "Lista del Roster":
+        col_m1, col_m2 = st.columns(2)
+        with col_m1:
+            unidad_live = st.selectbox("Unidad", st.session_state.df['Unidad'].unique(), key="live_unidad_box")
         
         jugadores_live_list = st.session_state.df[st.session_state.df['Unidad'] == unidad_live]['Jugador'].tolist()
         
         def format_live_player(nombre):
-            pos = st.session_state.df[st.session_state.df['Jugador'] == nombre]['Posición'].values[0]
-            jersey = st.session_state.df[st.session_state.df['Jugador'] == nombre]['Jersey'].values[0]
-            return f"#{jersey} - {nombre} ({pos})"
+            sub_df = st.session_state.df[st.session_state.df['Jugador'] == nombre]
+            if not sub_df.empty:
+                pos = sub_df['Posición'].values[0]
+                jersey = sub_df['Jersey'].values[0]
+                return f"#{jersey} - {nombre} ({pos})"
+            return nombre
 
-        with col_l3:
+        with col_m2:
             if len(jugadores_live_list) > 0:
-                jugador_live = st.selectbox("Jugador", jugadores_live_list, format_func=format_live_player, key="live_jugador")
-            else:
-                jugador_live = None
+                jugador_live = st.selectbox("Jugador", jugadores_live_list, format_func=format_live_player, key="live_jugador_box")
         
         if jugador_live:
-            idx_live = st.session_state.df.index[st.session_state.df['Jugador'] == jugador_live].tolist()[0]
-            pos_live = st.session_state.df.at[idx_live, 'Posición']
-    
-    else: # Modo Exprés por Jersey
-        with col_l2:
-            jersey_exprs = st.number_input("Número de Jersey en la Jugada", min_value=0, max_value=99, value=15)
-        with col_l3:
-            pos_exprs = st.selectbox("Posición Asignada", ["QB", "RB", "WR", "OL", "DL", "LB", "DB", "K", "P"], key="pos_exprs")
+            match_j = st.session_state.df[st.session_state.df['Jugador'] == jugador_live]
+            if not match_j.empty:
+                idx_live = match_j.index[0]
+                pos_live = match_j['Posición'].values[0]
+
+    else:
+        col_ex1, col_ex2 = st.columns(2)
+        with col_ex1:
+            jersey_exprs = st.number_input("Número de Jersey", min_value=0, max_value=99, value=12, key="num_jersey_exprs")
+        with col_ex2:
+            pos_exprs = st.selectbox("Posición", ["QB", "RB", "WR", "OL", "DL", "LB", "DB", "K", "P"], key="pos_exprs_box")
             
-        # Buscar si ya existe un registro provisional con este jersey
         match_jersey = st.session_state.df[st.session_state.df['Jersey'] == int(jersey_exprs)]
         
         if not match_jersey.empty:
             idx_live = match_jersey.index[0]
             jugador_live = st.session_state.df.at[idx_live, 'Jugador']
             pos_live = st.session_state.df.at[idx_live, 'Posición']
-            st.info(f"Encontrado: **{jugador_live}** (#{jersey_exprs} - {pos_live})")
+            st.info(f"Atendiendo a: **{jugador_live}** (#{jersey_exprs} - {pos_live})")
         else:
-            # Crear perfil provisional al vuelo
             nombre_provisional = f"Jugador #{int(jersey_exprs)}"
             unidad_asignada = "Ofensiva" if pos_exprs in ["QB", "RB", "WR", "OL"] else ("Defensiva" if pos_exprs in ["DL", "LB", "DB"] else "Equipos Especiales")
             
@@ -154,52 +158,32 @@ with tab6:
                 'Posición': pos_exprs,
                 'Unidad': unidad_asignada,
                 'Estatus_Medico': 'Activo',
-                'Entrenos_Programados': 1,
-                'Entrenos_Asistidos': 1,
-                'Partidos_Programados': 1,
-                'Partidos_Convocados': 1,
-                'Yardas_Producidas_Partidos': 0,
-                'Pases_Intentados_Partidos': 0,
-                'Pases_Completados_Partidos': 0,
-                'Bloqueos_Dominio_Partidos': 0,
-                'Capturas_Permitidas_Partidos': 0,
-                'Tackleadas_Efectivas_Partidos': 0,
-                'Intercepciones_Partidos': 0,
-                'Capturas_QB_Sacks_Partidos': 0,
-                'Goles_Campo_Partidos': 0,
-                'Puntos_Extra_Partidos': 0,
-                'Yardas_Producidas_Entrenos': 0,
-                'Pases_Intentados_Entrenos': 0,
-                'Pases_Completados_Entrenos': 0,
-                'Bloqueos_Dominio_Entrenos': 0,
-                'Capturas_Permitidas_Entrenos': 0,
-                'Tackleadas_Efectivas_Entrenos': 0,
-                'Intercepciones_Entrenos': 0,
-                'Capturas_QB_Sacks_Entrenos': 0,
-                'Fatiga_Entreno': 4,
-                'Dolor_Muscular': 3,
-                'Recuperacion_Entreno': 7,
-                'Ansiedad_Competitiva': 5,
-                'Confianza_Tactica': 8,
-                'Sueno_Prepartido': 7,
-                'Historial_Fatiga': [4, 5, 4],
-                'Historial_Rendimiento_Juego': [0]
+                'Entrenos_Programados': 1, 'Entrenos_Asistidos': 1, 'Partidos_Programados': 1, 'Partidos_Convocados': 1,
+                'Yardas_Producidas_Partidos': 0, 'Pases_Intentados_Partidos': 0, 'Pases_Completados_Partidos': 0,
+                'Bloqueos_Dominio_Partidos': 0, 'Capturas_Permitidas_Partidos': 0, 'Tackleadas_Efectivas_Partidos': 0,
+                'Intercepciones_Partidos': 0, 'Capturas_QB_Sacks_Partidos': 0, 'Goles_Campo_Partidos': 0, 'Puntos_Extra_Partidos': 0,
+                'Yardas_Producidas_Entrenos': 0, 'Pases_Intentados_Entrenos': 0, 'Pases_Completados_Entrenos': 0,
+                'Bloqueos_Dominio_Entrenos': 0, 'Capturas_Permitidas_Entrenos': 0, 'Tackleadas_Efectivas_Entrenos': 0,
+                'Intercepciones_Entrenos': 0, 'Capturas_QB_Sacks_Entrenos': 0,
+                'Fatiga_Entreno': 4, 'Dolor_Muscular': 3, 'Recuperacion_Entreno': 7,
+                'Ansiedad_Competitiva': 5, 'Confianza_Tactica': 8, 'Sueno_Prepartido': 7,
+                'Historial_Fatiga': [4, 5, 4], 'Historial_Rendimiento_Juego': [0]
             }
             st.session_state.df = pd.concat([st.session_state.df, pd.DataFrame([nuevo_registro])], ignore_index=True)
             idx_live = st.session_state.df.index[-1]
             jugador_live = nombre_provisional
             pos_live = pos_exprs
-            st.success(f"⚡ ¡Perfil provisional creado para el Jersey #{jersey_exprs}! (Después podrás editar su nombre en Base de Datos).")
+            st.success(f"⚡ Perfil provisional creado para Jersey #{jersey_exprs}. Puedes renombrarlo en la pestaña 'Base de Datos'.")
 
-    if 'jugador_live' in locals() and jugador_live:
+    if idx_live is not None and jugador_live:
         st.divider()
-        st.subheader(f"Acciones de Jugada para: {jugador_live} ({pos_live})")
+        st.subheader(f"🎮 Registrar Jugada para: {jugador_live} ({pos_live})")
 
         if pos_live == 'QB':
             col_q1, col_q2, col_q3 = st.columns(3)
             with col_q1:
-                yds_plus = st.number_input("Sumar Yardas (Aéreas/Terrestres)", min_value=-15, max_value=99, value=5, step=1, key="qb_yds")
-                if st.button("➕ Registrar Yardas"):
+                yds_plus = st.number_input("Yardas en la Jugada", min_value=-15, max_value=99, value=5, step=1, key="qb_yds_live")
+                if st.button("➕ Sumar Yardas"):
                     st.session_state.df.at[idx_live, 'Yardas_Producidas_Partidos'] += yds_plus
                     st.success(f"¡{yds_plus} yardas sumadas a {jugador_live}!")
             with col_q2:
@@ -215,52 +199,52 @@ with tab6:
         elif pos_live in ['WR', 'RB']:
             col_w1 = st.columns(1)[0]
             with col_w1:
-                yds_plus = st.number_input("Sumar Yardas en la Jugada", min_value=-5, max_value=99, value=5, step=1, key="wr_yds")
-                if st.button("➕ Registrar Yardas de Avance"):
+                yds_plus = st.number_input("Yardas en la Jugada", min_value=-5, max_value=99, value=5, step=1, key="wr_yds_live")
+                if st.button("➕ Sumar Yardas de Avance"):
                     st.session_state.df.at[idx_live, 'Yardas_Producidas_Partidos'] += yds_plus
                     st.success(f"¡{yds_plus} yardas sumadas a {jugador_live}!")
 
         elif pos_live == 'OL':
             col_ol1, col_ol2 = st.columns(2)
             with col_ol1:
-                if st.button("🥞 Registrar Bloqueo de Dominio (Pancake)"):
+                if st.button("🥞 Bloqueo de Dominio (Pancake)"):
                     st.session_state.df.at[idx_live, 'Bloqueos_Dominio_Partidos'] += 1
-                    st.success("¡Bloqueo de dominio registrado!")
+                    st.success("¡Pancake registrado!")
             with col_ol2:
-                if st.button("🛑 Registrar Sack Permitido"):
+                if st.button("🛑 Sack Permitido"):
                     st.session_state.df.at[idx_live, 'Capturas_Permitidas_Partidos'] += 1
                     st.success("¡Sack permitido registrado!")
 
         elif pos_live in ['DL', 'LB']:
             col_d1, col_d2 = st.columns(2)
             with col_d1:
-                if st.button("🎯 Registrar Tackleada Efectiva"):
+                if st.button("🎯 Tackleada Efectiva"):
                     st.session_state.df.at[idx_live, 'Tackleadas_Efectivas_Partidos'] += 1
                     st.success("¡Tackleada registrada!")
             with col_d2:
-                if st.button("💥 Registrar Sack al QB Rival"):
+                if st.button("💥 Sack Defensivo"):
                     st.session_state.df.at[idx_live, 'Capturas_QB_Sacks_Partidos'] += 1
-                    st.success("¡Sack defensivo registrado!")
+                    st.success("¡Sack registrado!")
 
         elif pos_live == 'DB':
             col_db1, col_db2 = st.columns(2)
             with col_db1:
-                if st.button("🎯 Registrar Tackleada Efectiva"):
+                if st.button("🎯 Tackleada Efectiva"):
                     st.session_state.df.at[idx_live, 'Tackleadas_Efectivas_Partidos'] += 1
                     st.success("¡Tackleada registrada!")
             with col_db2:
-                if st.button("🏈 Registrar Intercepción (INT)"):
+                if st.button("🏈 Intercepción (INT)"):
                     st.session_state.df.at[idx_live, 'Intercepciones_Partidos'] += 1
                     st.success("¡Intercepción registrada!")
 
         elif pos_live in ['K', 'P']:
             col_k1, col_k2 = st.columns(2)
             with col_k1:
-                if st.button("🎯 Gol de Campo Concretado (3 pts)"):
+                if st.button("🎯 Gol de Campo (3 pts)"):
                     st.session_state.df.at[idx_live, 'Goles_Campo_Partidos'] += 1
                     st.success("¡Gol de campo registrado!")
             with col_k2:
-                if st.button("⭐ Punto Extra Concretado (PAT)"):
+                if st.button("⭐ Punto Extra (PAT)"):
                     st.session_state.df.at[idx_live, 'Puntos_Extra_Partidos'] += 1
                     st.success("¡Punto extra registrado!")
 
@@ -288,41 +272,17 @@ with tab2:
                         st.error("🛑 Ya existe un jugador registrado con ese nombre.")
                     else:
                         nuevo_registro = {
-                            'Jersey': int(nuevo_jersey),
-                            'Jugador': nuevo_nombre.strip(),
-                            'Posición': nueva_posicion,
-                            'Unidad': nueva_unidad,
-                            'Estatus_Medico': 'Activo',
-                            'Entrenos_Programados': 1,
-                            'Entrenos_Asistidos': 1,
-                            'Partidos_Programados': 1,
-                            'Partidos_Convocados': 1,
-                            'Yardas_Producidas_Partidos': 0,
-                            'Pases_Intentados_Partidos': 0,
-                            'Pases_Completados_Partidos': 0,
-                            'Bloqueos_Dominio_Partidos': 0,
-                            'Capturas_Permitidas_Partidos': 0,
-                            'Tackleadas_Efectivas_Partidos': 0,
-                            'Intercepciones_Partidos': 0,
-                            'Capturas_QB_Sacks_Partidos': 0,
-                            'Goles_Campo_Partidos': 0,
-                            'Puntos_Extra_Partidos': 0,
-                            'Yardas_Producidas_Entrenos': 0,
-                            'Pases_Intentados_Entrenos': 0,
-                            'Pases_Completados_Entrenos': 0,
-                            'Bloqueos_Dominio_Entrenos': 0,
-                            'Capturas_Permitidas_Entrenos': 0,
-                            'Tackleadas_Efectivas_Entrenos': 0,
-                            'Intercepciones_Entrenos': 0,
-                            'Capturas_QB_Sacks_Entrenos': 0,
-                            'Fatiga_Entreno': 4,
-                            'Dolor_Muscular': 3,
-                            'Recuperacion_Entreno': 7,
-                            'Ansiedad_Competitiva': 5,
-                            'Confianza_Tactica': 8,
-                            'Sueno_Prepartido': 7,
-                            'Historial_Fatiga': [4, 5, 4],
-                            'Historial_Rendimiento_Juego': [0]
+                            'Jersey': int(nuevo_jersey), 'Jugador': nuevo_nombre.strip(), 'Posición': nueva_posicion, 'Unidad': nueva_unidad,
+                            'Estatus_Medico': 'Activo', 'Entrenos_Programados': 1, 'Entrenos_Asistidos': 1, 'Partidos_Programados': 1, 'Partidos_Convocados': 1,
+                            'Yardas_Producidas_Partidos': 0, 'Pases_Intentados_Partidos': 0, 'Pases_Completados_Partidos': 0,
+                            'Bloqueos_Dominio_Partidos': 0, 'Capturas_Permitidas_Partidos': 0, 'Tackleadas_Efectivas_Partidos': 0,
+                            'Intercepciones_Partidos': 0, 'Capturas_QB_Sacks_Partidos': 0, 'Goles_Campo_Partidos': 0, 'Puntos_Extra_Partidos': 0,
+                            'Yardas_Producidas_Entrenos': 0, 'Pases_Intentados_Entrenos': 0, 'Pases_Completados_Entrenos': 0,
+                            'Bloqueos_Dominio_Entrenos': 0, 'Capturas_Permitidas_Entrenos': 0, 'Tackleadas_Efectivas_Entrenos': 0,
+                            'Intercepciones_Entrenos': 0, 'Capturas_QB_Sacks_Entrenos': 0,
+                            'Fatiga_Entreno': 4, 'Dolor_Muscular': 3, 'Recuperacion_Entreno': 7,
+                            'Ansiedad_Competitiva': 5, 'Confianza_Tactica': 8, 'Sueno_Prepartido': 7,
+                            'Historial_Fatiga': [4, 5, 4], 'Historial_Rendimiento_Juego': [0]
                         }
                         st.session_state.df = pd.concat([st.session_state.df, pd.DataFrame([nuevo_registro])], ignore_index=True)
                         st.success(f"✅ ¡{nuevo_nombre} dado de alta exitosamente!")
@@ -590,9 +550,9 @@ with tab5:
     
     st.dataframe(df_calendario, use_container_width=True, hide_index=True)
 
-# --- PESTAÑA 3: BOX SCORE (ESTILO NCAA) ---
+# --- PESTAÑA 3: BOX SCORE OFICIAL ---
 with tab3:
-    st.header("📊 Box Score y Estadísticas por Categoría (Estilo NCAA)")
+    st.header("📊 Box Score Oficial y Estadísticas por Categoría")
     st.write("Consulta el reporte general del equipo desglosado por bloques técnicos.")
     
     df_global = st.session_state.df.copy()
