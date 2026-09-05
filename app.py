@@ -79,9 +79,9 @@ if 'df' not in st.session_state:
     }
     st.session_state.df = pd.DataFrame(datos_iniciales)
 
-tab1, tab2, tab3, tab4 = st.tabs(["📊 Análisis Individual", "⚙️ Base de Datos", "📈 Rendimiento Equipo", "📝 Registro Diario"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["📊 Análisis Individual", "⚙️ Base de Datos", "📈 Rendimiento Equipo", "📝 Registro Diario", "📅 Calendario y Planificación"])
 
-# --- PESTAÑA 4: REGISTRO DIARIO (DIVIDIDO EN DOS MÓDULOS) ---
+# --- PESTAÑA 4: REGISTRO DIARIO ---
 with tab4:
     st.header("Captura de Datos Operativos")
     
@@ -105,7 +105,6 @@ with tab4:
     
     st.divider()
 
-    # --- CASO 1: REGISTRO DE PARTIDO ---
     if tipo_registro_principal == "Estadísticas de Partido":
         st.subheader(f"🏟️ Registro de Partido para: {jugador_seleccionado} ({pos_actual})")
         
@@ -159,7 +158,6 @@ with tab4:
                 
                 st.success(f"✅ ¡Estadísticas de partido ({sede_partido}) guardadas para {jugador_seleccionado}!")
 
-    # --- CASO 2: REGISTRO PSICODEPORTIVO Y BIENESTAR ---
     else:
         st.subheader(f"🧠 Monitoreo Psicodeportivo para: {jugador_seleccionado} ({pos_actual})")
         
@@ -193,7 +191,36 @@ with tab4:
                 
                 st.success(f"✅ ¡Datos psicodeportivos guardados para {jugador_seleccionado}!")
 
-# --- PESTAÑA 3: RENDIMIENTO DEL EQUIPO Y GRÁFICAS ---
+# --- PESTAÑA 5: CALENDARIO Y PLANIFICACIÓN SEMANAL ---
+with tab5:
+    st.header("📅 Calendario Oficial ONEFA 2026 y Planificación Psicológica")
+    st.write("Consulta las fechas de la temporada y el programa estratégico para la aplicación de encuestas de bienestar.")
+    
+    # Tabla de Calendario Oficial
+    df_calendario = pd.DataFrame({
+        'Jornada': ['J1', 'J2', 'J3', 'J4', 'J5', 'J6', 'J7', 'J8', 'J9', 'J10'],
+        'Fecha': ['4 Sep', '12 Sep', '18 Sep', '25 Sep', '3 Oct', '9 Oct', '17 Oct', '24 Oct', '30 Oct', 'Noviembre'],
+        'Rival': ['Leones Anáhuac', 'Burros Blancos', 'ITESM Puebla', 'ITESM Mty', 'ITESM CEM', 'Linces UVM', 'Águilas Blancas', 'Aztecas UDLAP', 'Leones UAC', 'BYE (Descanso)'],
+        'Sede / Condición': ['Visita (Cueva del León)', 'Local (EFO)', 'Visita (EFO)', 'Local (Borregos)', 'Visita (EFO)', 'Visita (JOM)', 'Local (EFO)', 'Local (Templo del Dolor)', 'Local (UAC)', 'Descanso'],
+        'Días Clave de Encuestas Psicológicas': [
+            'Mié 2 Sep & Vie 4 Sep (J1)', 
+            'Mié 9 Sep & Vie 11 Sep (J2)', 
+            'Mié 16 Sep & Vie 18 Sep (J3)', 
+            'Mié 23 Sep & Vie 25 Sep (J4)', 
+            'Mié 30 Sep & Vie 2 Oct (J5)', 
+            'Mié 7 Oct & Vie 9 Oct (J6)', 
+            'Mié 14 Oct & Vie 17 Oct (J7)', 
+            'Mié 21 Oct & Vie 24 Oct (J8)', 
+            'Mié 28 Oct & Vie 30 Oct (J9)', 
+            'Descanso / Recuperación'
+        ]
+    })
+    
+    st.dataframe(df_calendario, use_container_width=True, hide_index=True)
+    
+    st.info("💡 **Estrategia Psicodeportiva:** Se recomienda aplicar la encuesta de fatiga y estrés cada **Miércoles** (para medir impacto de cargas pesadas a mitad de semana) y cada **Viernes** (para evaluar el descanso y la ansiedad previa al encuentro del fin de semana).")
+
+# --- PESTAÑA 3: RENDIMIENTO DEL EQUIPO ---
 with tab3:
     st.header("📈 Rendimiento General y Comparativa de Unidades")
     df_global = st.session_state.df.copy()
@@ -276,18 +303,22 @@ with tab1:
                 estatus = stats_jugador['Estatus_Medico']
                 fatiga = stats_jugador['Fatiga_Actual']
                 carga = stats_jugador['Carga_Mental_Actual']
+                sueno = stats_jugador['Sueno_Actual']
                 
+                factor_sueno_inv = max(0, (10 - sueno))
+                indice_riesgo = (fatiga * 0.4) + (carga * 0.4) + (factor_sueno_inv * 0.2)
+
                 col_title, col_semaforo = st.columns([2, 1])
                 with col_title:
                     st.header(f"Análisis: {jugador_filtro} - #{stats_jugador['Jersey']} ({pos})")
                 
                 with col_semaforo:
-                    if estatus == "Lesionado / Inactivo" or fatiga >= 8 or carga >= 8:
-                        st.error("🔴 **ESTATUS: ALTO RIESGO / DESCANSO**")
-                    elif estatus == "Precaución Médica" or fatiga >= 6 or carga >= 6:
-                        st.warning("🟡 **ESTATUS: PRECAUCIÓN / MODERADO**")
+                    if estatus == "Lesionado / Inactivo" or indice_riesgo >= 7.0:
+                        st.error(f"🔴 **RIESGO ALTO** (Índice: {indice_riesgo:.1f}/10)")
+                    elif estatus == "Precaución Médica" or indice_riesgo >= 5.0:
+                        st.warning(f"🟡 **RIESGO MODERADO** (Índice: {indice_riesgo:.1f}/10)")
                     else:
-                        st.success("🟢 **ESTATUS: DISPONIBLE / ÓPTIMO**")
+                        st.success(f"🟢 **ÓPTIMO / DISPONIBLE** (Índice: {indice_riesgo:.1f}/10)")
 
                 entrenos_tot = stats_jugador['Entrenos_Programados']
                 entrenos_asist = stats_jugador['Entrenos_Asistidos']
@@ -339,7 +370,7 @@ with tab1:
                 st.subheader("🧠 Monitoreo Psicodeportivo y Gráficas de Evolución")
                 col4, col5, col6 = st.columns(3)
                 with col4: st.metric("Carga Mental Actual", f"{carga}/10")
-                with col5: st.metric("Horas de Sueño", f"{stats_jugador['Sueno_Actual']} hrs")
+                with col5: st.metric("Horas de Sueño", f"{sueno} hrs")
                 with col6: st.metric("Fatiga Física Actual", f"{fatiga}/10")
 
                 col_g1, col_g2 = st.columns(2)
