@@ -30,7 +30,7 @@ if not check_password():
 # ==========================================
 st.title("Panel de Control: Rendimiento y Bienestar - Pumas CU")
 
-# 1. Base de datos inicial con separación de bienestar (Entrenamiento vs Pre-partido)
+# 1. Base de datos inicial con métricas psicológicas específicas por momento
 if 'df' not in st.session_state:
     datos_iniciales = {
         'Jersey': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 73, 87],
@@ -52,7 +52,7 @@ if 'df' not in st.session_state:
         'Partidos_Programados': [1]*15,
         'Partidos_Convocados': [1]*15,
         
-        # Rendimiento Partidos vs Entrenos
+        # Rendimiento en campo
         'Yardas_Partidos': [0]*15,
         'Tackleadas_Partidos': [0]*15,
         'Intercepciones_Partidos': [0]*15,
@@ -69,14 +69,15 @@ if 'df' not in st.session_state:
         'Sacks_Permitidos_Entrenamientos': [0]*15,
         'Sacks_QB_Entrenamientos': [0]*15,
         
-        # --- BIENESTAR SEPARADO (ENTRENAMIENTO VS PRE-PARTIDO) ---
-        'Carga_Entreno': [5]*15,
-        'Sueno_Entreno': [7]*15,
+        # --- BLOQUE PSICOLÓGICO 1: MITAD DE SEMANA (ENTRENOS) ---
         'Fatiga_Entreno': [4]*15,
+        'Dolor_Muscular': [3]*15,
+        'Recuperacion_Entreno': [7]*15,
         
-        'Carga_Prepartido': [5]*15,
+        # --- BLOQUE PSICOLÓGICO 2: PRE-PARTIDO (MATCHDAY) ---
+        'Ansiedad_Competitiva': [5]*15,
+        'Confianza_Tactica': [8]*15,
         'Sueno_Prepartido': [7]*15,
-        'Fatiga_Prepartido': [4]*15,
         
         'Historial_Fatiga': [[4, 5, 4]]*15,
         'Historial_Rendimiento_Juego': [[0]]*15
@@ -187,13 +188,15 @@ with tab4:
             st.write("---")
             
             if tipo_encuesta == "Evaluación de Mitad de Semana (Entrenamiento)":
-                carga_nueva = st.slider("Carga Mental / Estrés en Entrenos (1-10)", 1, 10, int(st.session_state.df.at[idx, 'Carga_Entreno']))
-                sueno_nuevo = st.slider("Horas de Sueño Promedio (Entrenamientos)", 1, 12, int(st.session_state.df.at[idx, 'Sueno_Entreno']))
-                fatiga_nueva = st.slider("Nivel de Fatiga Física en Entrenos (1-10)", 1, 10, int(st.session_state.df.at[idx, 'Fatiga_Entreno']))
+                st.markdown("#### 🏋️ Factores de Carga y Fatiga en Entrenamientos")
+                fatiga_entreno_nueva = st.slider("Fatiga Física Acumulada (1-10)", 1, 10, int(st.session_state.df.at[idx, 'Fatiga_Entreno']))
+                dolor_muscular_nuevo = st.slider("Dolor Muscular / Molestias Menores (1-10)", 1, 10, int(st.session_state.df.at[idx, 'Dolor_Muscular']))
+                recuperacion_nueva = st.slider("Nivel de Recuperación / Frescura (1-10)", 1, 10, int(st.session_state.df.at[idx, 'Recuperacion_Entreno']))
             else:
-                carga_nueva = st.slider("Nivel de Ansiedad / Estrés Pre-partido (1-10)", 1, 10, int(st.session_state.df.at[idx, 'Carga_Prepartido']))
-                sueno_nuevo = st.slider("Horas de Sueño Noche Previa (Matchday)", 1, 12, int(st.session_state.df.at[idx, 'Sueno_Prepartido']))
-                fatiga_nueva = st.slider("Fatiga Física Pre-partido (1-10)", 1, 10, int(st.session_state.df.at[idx, 'Fatiga_Prepartido']))
+                st.markdown("#### 🏟️ Factores Psicológicos y de Activación Pre-partido")
+                ansiedad_nueva = st.slider("Nivel de Ansiedad / Activación Competitiva (1-10)", 1, 10, int(st.session_state.df.at[idx, 'Ansiedad_Competitiva']))
+                confianza_nueva = st.slider("Confianza en el Plan de Juego (1-10)", 1, 10, int(st.session_state.df.at[idx, 'Confianza_Tactica']))
+                sueno_previo_nuevo = st.slider("Horas de Sueño Noche Previa (Matchday)", 1, 12, int(st.session_state.df.at[idx, 'Sueno_Prepartido']))
             
             asistencia_entreno = st.selectbox("Asistencia a la sesión", ["Asistió", "No Asistió"])
             nuevo_estatus = st.selectbox("Estatus Médico / Disponibilidad", ["Activo", "Precaución Médica", "Lesionado / Inactivo"], index=["Activo", "Precaución Médica", "Lesionado / Inactivo"].index(st.session_state.df.at[idx, 'Estatus_Medico']) if st.session_state.df.at[idx, 'Estatus_Medico'] in ["Activo", "Precaución Médica", "Lesionado / Inactivo"] else 0)
@@ -209,18 +212,18 @@ with tab4:
                 st.session_state.df.at[idx, 'Estatus_Medico'] = nuevo_estatus
                 
                 if tipo_encuesta == "Evaluación de Mitad de Semana (Entrenamiento)":
-                    st.session_state.df.at[idx, 'Carga_Entreno'] = carga_nueva
-                    st.session_state.df.at[idx, 'Sueno_Entreno'] = sueno_nuevo
-                    st.session_state.df.at[idx, 'Fatiga_Entreno'] = fatiga_nueva
+                    st.session_state.df.at[idx, 'Fatiga_Entreno'] = fatiga_entreno_nueva
+                    st.session_state.df.at[idx, 'Dolor_Muscular'] = dolor_muscular_nuevo
+                    st.session_state.df.at[idx, 'Recuperacion_Entreno'] = recuperacion_nueva
+                    
+                    hist_fatiga = st.session_state.df.at[idx, 'Historial_Fatiga']
+                    hist_fatiga.append(fatiga_entreno_nueva)
+                    if len(hist_fatiga) > 5: hist_fatiga.pop(0)
+                    st.session_state.df.at[idx, 'Historial_Fatiga'] = hist_fatiga
                 else:
-                    st.session_state.df.at[idx, 'Carga_Prepartido'] = carga_nueva
-                    st.session_state.df.at[idx, 'Sueno_Prepartido'] = sueno_nuevo
-                    st.session_state.df.at[idx, 'Fatiga_Prepartido'] = fatiga_nueva
-                
-                hist_fatiga = st.session_state.df.at[idx, 'Historial_Fatiga']
-                hist_fatiga.append(fatiga_nueva)
-                if len(hist_fatiga) > 5: hist_fatiga.pop(0)
-                st.session_state.df.at[idx, 'Historial_Fatiga'] = hist_fatiga
+                    st.session_state.df.at[idx, 'Ansiedad_Competitiva'] = ansiedad_nueva
+                    st.session_state.df.at[idx, 'Confianza_Tactica'] = confianza_nueva
+                    st.session_state.df.at[idx, 'Sueno_Prepartido'] = sueno_previo_nuevo
                 
                 st.success(f"✅ ¡{tipo_encuesta} guardada para {jugador_seleccionado}!")
 
@@ -234,22 +237,15 @@ with tab5:
         'Fecha': ['4 Sep', '12 Sep', '18 Sep', '25 Sep', '3 Oct', '9 Oct', '17 Oct', '24 Oct', '30 Oct', 'Noviembre'],
         'Rival': ['Leones Anáhuac', 'Burros Blancos', 'ITESM Puebla', 'ITESM Mty', 'ITESM CEM', 'Linces UVM', 'Águilas Blancas', 'Aztecas UDLAP', 'Leones UAC', 'BYE (Descanso)'],
         'Sede / Condición': ['Visita (Cueva del León)', 'Local (EFO)', 'Visita (EFO)', 'Local (Borregos)', 'Visita (EFO)', 'Visita (JOM)', 'Local (EFO)', 'Local (Templo del Dolor)', 'Local (UAC)', 'Descanso'],
-        'Días Clave de Encuestas Psicológicas': [
-            'Mié 2 Sep (Entreno) & Vie 4 Sep (Pre-partido)', 
-            'Mié 9 Sep & Vie 11 Sep', 
-            'Mié 16 Sep & Vie 18 Sep', 
-            'Mié 23 Sep & Vie 25 Sep', 
-            'Mié 30 Sep & Vie 2 Oct', 
-            'Mié 7 Oct & Vie 9 Oct', 
-            'Mié 14 Oct & Vie 17 Oct', 
-            'Mié 21 Oct & Vie 24 Oct', 
-            'Mié 28 Oct & Vie 30 Oct', 
-            'Descanso / Recuperación'
+        'Evaluaciones Clave': [
+            'Mié (Fatiga/Dolor) & Vie (Ansiedad/Confianza)', 
+            'Mié & Vie', 'Mié & Vie', 'Mié & Vie', 'Mié & Vie', 
+            'Mié & Vie', 'Mié & Vie', 'Mié & Vie', 'Mié & Vie', 'Descanso'
         ]
     })
     
     st.dataframe(df_calendario, use_container_width=True, hide_index=True)
-    st.info("💡 **Estrategia Psicodeportiva:** Aplica la **Evaluación de Mitad de Semana** cada **Miércoles** y la **Evaluación Pre-partido** cada **Viernes** previo al juego.")
+    st.info("💡 **Enfoque Psicodeportivo:** Los **Miércoles** medimos sobrecarga física y dolor muscular; los **Viernes** medimos la activación, confianza táctica y descanso previo al juego.")
 
 # --- PESTAÑA 3: RENDIMIENTO DEL EQUIPO ---
 with tab3:
@@ -262,8 +258,8 @@ with tab3:
         st.subheader("🏈 Ofensiva")
         of_df = df_global[df_global['Unidad'] == 'Ofensiva']
         st.metric("Yardas Totales (Partidos)", int(of_df['Yardas_Partidos'].sum()))
-        st.metric("Fatiga Promedio (Entrenos)", f"{of_df['Fatiga_Entreno'].mean():.1f}/10")
-        st.metric("Fatiga Promedio (Pre-partido)", f"{of_df['Fatiga_Prepartido'].mean():.1f}/10")
+        st.metric("Fatiga Entrenos Promedio", f"{of_df['Fatiga_Entreno'].mean():.1f}/10")
+        st.metric("Confianza Táctica Promedio", f"{of_df['Confianza_Tactica'].mean():.1f}/10")
         
     with col_def:
         st.subheader("🛡️ Defensiva")
@@ -271,19 +267,19 @@ with tab3:
         st.metric("Tackleadas Totales", int(def_df['Tackleadas_Partidos'].sum()))
         total_partidos_convocados = max(int(def_df['Partidos_Convocados'].sum()), 1)
         st.metric("Promedio Sacks / J", f"{def_df['Sacks_QB_Partidos'].sum() / total_partidos_convocados:.2f}")
-        st.metric("Fatiga Promedio (Entrenos)", f"{def_df['Fatiga_Entreno'].mean():.1f}/10")
-        st.metric("Fatiga Promedio (Pre-partido)", f"{def_df['Fatiga_Prepartido'].mean():.1f}/10")
+        st.metric("Fatiga Entrenos Promedio", f"{def_df['Fatiga_Entreno'].mean():.1f}/10")
+        st.metric("Confianza Táctica Promedio", f"{def_df['Confianza_Tactica'].mean():.1f}/10")
         
     with col_st:
         st.subheader("🦵 Equipos Especiales")
         st_df = df_global[df_global['Unidad'] == 'Equipos Especiales']
         st.metric("Puntos Totales", int((st_df['Goles_Campo_Partidos'].sum() * 3) + (st_df['Puntos_Extra_Partidos'].sum() * 1)))
-        st.metric("Fatiga Promedio (Entrenos)", f"{st_df['Fatiga_Entreno'].mean():.1f}/10")
-        st.metric("Fatiga Promedio (Pre-partido)", f"{st_df['Fatiga_Prepartido'].mean():.1f}/10")
+        st.metric("Fatiga Entrenos Promedio", f"{st_df['Fatiga_Entreno'].mean():.1f}/10")
+        st.metric("Confianza Táctica Promedio", f"{st_df['Confianza_Tactica'].mean():.1f}/10")
 
     st.divider()
-    st.subheader("📊 Gráfica Comparativa de Fatiga Pre-partido por Unidad")
-    df_fatiga_unidad = df_global.groupby('Unidad')['Fatiga_Prepartido'].mean().reset_index()
+    st.subheader("📊 Gráfica Comparativa de Fatiga en Entrenamientos por Unidad")
+    df_fatiga_unidad = df_global.groupby('Unidad')['Fatiga_Entreno'].mean().reset_index()
     st.bar_chart(df_fatiga_unidad.set_index('Unidad'))
 
     st.divider()
@@ -293,14 +289,12 @@ with tab3:
         label="📥 Descargar Reporte en CSV",
         data=csv_data,
         file_name='reporte_semanal_pumas_cu.csv',
-        mime='text/csv',
+        mime='text/css',
     )
 
 # --- PESTAÑA 2: BASE DE DATOS Y EDICIÓN ---
 with tab2:
-    st.subheader("⚙️ Gestión del Roster y Base de Datos por Bloques")
-    st.write("Aquí puedes visualizar y editar directamente la base de datos dividida entre el rendimiento y las evaluaciones psicológicas.")
-    
+    st.subheader("⚙️ Gestión del Roster y Base de Datos")
     df_editado = st.data_editor(st.session_state.df, num_rows="dynamic", use_container_width=True, hide_index=True)
     if st.button("Guardar Cambios Globales"):
         st.session_state.df = df_editado
@@ -335,13 +329,13 @@ with tab1:
                 st.divider()
                 
                 estatus = stats_jugador['Estatus_Medico']
-                # Usamos los datos pre-partido como referencia principal del estado actual
-                fatiga = stats_jugador['Fatiga_Prepartido']
-                carga = stats_jugador['Carga_Prepartido']
-                sueno = stats_jugador['Sueno_Prepartido']
+                fatiga_entreno = stats_jugador['Fatiga_Entreno']
+                ansiedad = stats_jugador['Ansiedad_Competitiva']
+                sueno_pre = stats_jugador['Sueno_Prepartido']
                 
-                factor_sueno_inv = max(0, (10 - sueno))
-                indice_riesgo = (fatiga * 0.4) + (carga * 0.4) + (factor_sueno_inv * 0.2)
+                # Fórmula de riesgo ajustada con variables psicológicas reales
+                factor_sueno_inv = max(0, (10 - sueno_pre))
+                indice_riesgo = (fatiga_entreno * 0.4) + (ansiedad * 0.4) + (factor_sueno_inv * 0.2)
 
                 col_title, col_semaforo = st.columns([2, 1])
                 with col_title:
@@ -402,26 +396,26 @@ with tab1:
 
                 st.divider()
 
-                st.subheader("🧠 Monitoreo Psicodeportivo (Comparativa)")
+                st.subheader("🧠 Perfil Psicodeportivo Especializado")
                 
                 col_psi1, col_psi2 = st.columns(2)
                 with col_psi1:
-                    st.markdown("### 🏋️ Mitad de Semana (Entrenos)")
-                    st.metric("Carga Mental", f"{stats_jugador['Carga_Entreno']}/10")
-                    st.metric("Sueño Promedio", f"{stats_jugador['Sueno_Entreno']} hrs")
-                    st.metric("Fatiga Física", f"{stats_jugador['Fatiga_Entreno']}/10")
+                    st.markdown("### 🏋️ Mitad de Semana (Entrenamientos)")
+                    st.metric("Fatiga Física Acumulada", f"{stats_jugador['Fatiga_Entreno']}/10")
+                    st.metric("Dolor / Molestias Físicas", f"{stats_jugador['Dolor_Muscular']}/10")
+                    st.metric("Recuperación / Frescura", f"{stats_jugador['Recuperacion_Entreno']}/10")
                 
                 with col_psi2:
                     st.markdown("### 🏟️ Pre-partido (Matchday)")
-                    st.metric("Ansiedad / Estrés", f"{stats_jugador['Carga_Prepartido']}/10")
+                    st.metric("Ansiedad / Activación", f"{stats_jugador['Ansiedad_Competitiva']}/10")
+                    st.metric("Confianza Táctica", f"{stats_jugador['Confianza_Tactica']}/10")
                     st.metric("Sueño Noche Previa", f"{stats_jugador['Sueno_Prepartido']} hrs")
-                    st.metric("Fatiga Pre-partido", f"{stats_jugador['Fatiga_Prepartido']}/10")
 
                 st.divider()
 
                 col_g1, col_g2 = st.columns(2)
                 with col_g1:
-                    st.write("📈 **Tendencia de Fatiga Reciente:**")
+                    st.write("📈 **Tendencia de Fatiga en Entrenamientos:**")
                     df_tendencia_fatiga = pd.DataFrame({'Fatiga': stats_jugador['Historial_Fatiga']})
                     st.line_chart(df_tendencia_fatiga)
                 with col_g2:
