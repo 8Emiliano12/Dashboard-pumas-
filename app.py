@@ -91,7 +91,6 @@ with tab2:
     st.header("⚙️ Gestión del Roster y Base de Datos")
     st.write("Administra el alta/baja de jugadores y consulta los datos segmentados por área.")
 
-    # --- SECCIÓN NUEVA: AGREGAR O QUITAR JUGADORES ---
     with st.expander("👤 Administrar Roster (Alta / Baja de Jugadores)", expanded=False):
         col_alta, col_baja = st.columns(2)
         
@@ -192,7 +191,7 @@ with tab2:
             st.success("¡Estadísticas ofensivas actualizadas correctamente!")
 
     with sub_def:
-        st.subheader("Rendimiento Técnico: Unidad Defensiva (Front 7 y Secundaria)")
+        st.subheader("Rendimiento Técnico: Unidad Defensiva")
         cols_def = [
             'Jersey', 'Jugador', 'Posición', 'Partidos_Convocados',
             'Tackleadas_Efectivas_Partidos', 'Intercepciones_Partidos', 'Capturas_QB_Sacks_Partidos',
