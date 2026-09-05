@@ -389,7 +389,7 @@ with tab4:
                         st.session_state.df.at[idx, 'Confianza_Tactica'] = confianza_nueva
                         st.session_state.df.at[idx, 'Sueno_Prepartido'] = sueno_previo_nuevo
                     
-                    st.success(f"✅ ¡{tipo_encuesta} guardada para {jugador_seleccionado}!")
+                    st.success(f"✅ ¡{tipo_encuesta} guardada para {jugador_serializer := jugador_seleccionado}!")
 
 # --- PESTAÑA 5: CALENDARIO Y PLANIFICACIÓN SEMANAL ---
 with tab5:
@@ -422,15 +422,15 @@ with tab5:
     st.dataframe(df_calendario, use_container_width=True, hide_index=True)
     st.info("💡 **Enfoque Psicodeportivo:** Los **Miércoles** medimos sobrecarga física y dolor muscular; los **Viernes** medimos la activación, confianza táctica y descanso previo al juego.")
 
-# --- PESTAÑA 3: RENDIMIENTO DEL EQUIPO (ESTILO BOX SCORE / NCAA) ---
+# --- PESTAÑA 3: RENDIMIENTO DEL EQUIPO (ESTILO BOX SCORE / NCAA CORREGIDO) ---
 with tab3:
     st.header("📊 Box Score y Estadísticas por Categoría (Estilo NCAA)")
     st.write("Consulta el reporte general del equipo desglosado por bloques técnicos y de rendimiento profesional.")
     
     df_global = st.session_state.df.copy()
     
-    # --- 1. BLOQUE: RUSHING / PASSING (OFENSIVA) ---
-    st.markdown("### 🏈 OFENSIVA: PASSING & RUSHING")
+    # --- 1. BLOQUE: PASSING / RUSHING (OFENSIVA GENERAL) ---
+    st.markdown("### 🏈 OFENSIVA: PASSING & RUSHING (QB, WR, RB)")
     df_of = df_global[df_global['Unidad'] == 'Ofensiva'].copy()
     if not df_of.empty:
         df_of['Pases_C_ATT'] = df_of['Pases_Completados_Partidos'].astype(str) + "-" + df_of['Pases_Intentados_Partidos'].astype(str)
@@ -441,16 +441,20 @@ with tab3:
     else:
         st.info("No hay registros ofensivos activos.")
 
-    st.markdown("### 🛑 BLOQUEOS Y PROTECCIÓN (OFFENSIVE LINE)")
-    if not df_of.empty:
-        box_blocking = df_of[['Jersey', 'Jugador', 'Posición', 'Bloqueos_Dominio_Partidos', 'Capturas_Permitidas_Partidos']].rename(columns={
+    # --- 2. BLOQUE: LÍNEA OFENSIVA (SOLO OL) ---
+    st.markdown("### 🛑 BLOQUEOS Y PROTECCIÓN (OFFENSIVE LINE - OL)")
+    df_ol = df_global[df_global['Posición'] == 'OL'].copy()
+    if not df_ol.empty:
+        box_blocking = df_ol[['Jersey', 'Jugador', 'Posición', 'Bloqueos_Dominio_Partidos', 'Capturas_Permitidas_Partidos']].rename(columns={
             'Jersey': 'NO.', 'Jugador': 'JUGADOR', 'Posición': 'POS', 'Bloqueos_Dominio_Partidos': 'BLOQUEOS DOMINIO (PANCAKES)', 'Capturas_Permitidas_Partidos': 'SACKS PERMITIDOS'
         })
         st.dataframe(box_blocking, use_container_width=True, hide_index=True)
+    else:
+        st.info("No hay linieros ofensivos registrados.")
 
     st.divider()
 
-    # --- 2. BLOQUE: DEFENSE ---
+    # --- 3. BLOQUE: DEFENSE ---
     st.markdown("### 🛡️ DEFENSE (FRONT 7 & SECUNDARIA)")
     df_def = df_global[df_global['Unidad'] == 'Defensiva'].copy()
     if not df_def.empty:
@@ -463,7 +467,7 @@ with tab3:
 
     st.divider()
 
-    # --- 3. BLOQUE: KICKING / SPECIAL TEAMS ---
+    # --- 4. BLOQUE: KICKING / SPECIAL TEAMS ---
     st.markdown("### 🦵 KICKING & SPECIAL TEAMS")
     df_st = df_global[df_global['Unidad'] == 'Equipos Especiales'].copy()
     if not df_st.empty:
