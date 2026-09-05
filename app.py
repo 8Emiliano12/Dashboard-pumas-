@@ -25,8 +25,8 @@ if 'df' not in st.session_state:
         'Bloqueos_Efectivos': [0]*15,
         'Capturas_Permitidas': [0]*15,
         'Capturas_QB': [0]*15,
-        'Goles_Campo': [0]*15,      # Nuevo para Equipos Especiales
-        'Puntos_Extra': [0]*15,     # Nuevo para Equipos Especiales
+        'Goles_Campo': [0]*15,      
+        'Puntos_Extra': [0]*15,     
         'Carga_Mental_Semanal': [0]*15,
         'Calidad_Sueno': [0]*15,
         'Fatiga_Traslado': [0]*15
@@ -35,19 +35,18 @@ if 'df' not in st.session_state:
 
 tab1, tab2, tab3, tab4 = st.tabs(["📊 Análisis Individual", "⚙️ Base de Datos", "📈 Rendimiento Equipo", "📝 Registro Diario"])
 
-# --- PESTAÑA 4: REGISTRO DIARIO (FILTRO POR UNIDAD) ---
+# --- PESTAÑA 4: REGISTRO DIARIO ---
 with tab4:
     st.header("Captura de Entrenamientos y Partidos")
     
     col_filtro1, col_filtro2 = st.columns(2)
     with col_filtro1:
-        unidad_registro = st.selectbox("1. Selecciona la Unidad", st.session_state.df['Unidad'].unique())
+        unidad_registro = st.selectbox("1. Selecciona la Unidad", st.session_state.df['Unidad'].unique(), key="unidad_reg")
     
-    # Filtrar la lista de jugadores basándose en la unidad seleccionada
     jugadores_filtrados = st.session_state.df[st.session_state.df['Unidad'] == unidad_registro]['Jugador'].tolist()
     
     with col_filtro2:
-        jugador_seleccionado = st.selectbox("2. Selecciona al Jugador", jugadores_filtrados)
+        jugador_seleccionado = st.selectbox("2. Selecciona al Jugador", jugadores_filtrados, key="jugador_reg")
     
     idx = st.session_state.df.index[st.session_state.df['Jugador'] == jugador_seleccionado].tolist()[0]
     pos_actual = st.session_state.df.at[idx, 'Posición']
@@ -147,20 +146,30 @@ with tab1:
     df['Eficiencia (Yds/Intento)'] = df['Yardas_Totales'] / df['Targets_Intentos_Calc']
     df['Proyeccion_Yardas'] = df['Eficiencia (Yds/Intento)'] * 10
 
-    st.sidebar.header("Filtros de Búsqueda")
+    st.subheader("Filtros de Búsqueda")
     if not df.empty:
-        unidad_filtro = st.sidebar.selectbox("Selecciona la Unidad", df['Unidad'].unique())
+        # Colocamos los filtros en columnas horizontales en lugar de la barra lateral
+        col_f1, col_f2, col_f3 = st.columns(3)
+        
+        with col_f1:
+            unidad_filtro = st.selectbox("Selecciona la Unidad", df['Unidad'].unique(), key="unidad_coach")
+            
         posiciones_disponibles = df[df['Unidad'] == unidad_filtro]['Posición'].unique()
         
         if len(posiciones_disponibles) > 0:
-            posicion_filtro = st.sidebar.selectbox("Selecciona la Posición", posiciones_disponibles)
+            with col_f2:
+                posicion_filtro = st.selectbox("Selecciona la Posición", posiciones_disponibles, key="posicion_coach")
+                
             jugadores_disponibles = df[df['Posición'] == posicion_filtro]['Jugador']
             
             if not jugadores_disponibles.empty:
-                jugador_filtro = st.sidebar.selectbox("Selecciona al Jugador", jugadores_disponibles)
+                with col_f3:
+                    jugador_filtro = st.selectbox("Selecciona al Jugador", jugadores_disponibles, key="jugador_coach")
+                    
                 stats_jugador = df[df['Jugador'] == jugador_filtro].iloc[0]
                 pos = stats_jugador['Posición']
 
+                st.divider()
                 st.header(f"Análisis de: {jugador_filtro} - #{stats_jugador['Jersey']} ({pos})")
                 
                 st.subheader("Métricas Deportivas")
