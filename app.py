@@ -30,7 +30,7 @@ if not check_password():
 # ==========================================
 st.title("Panel de Control: Rendimiento y Bienestar - Pumas CU")
 
-# 1. Base de datos con Bienestar Unificado y Estadísticas Separadas
+# 1. Base de datos con Historial de Cargas, Estatus Médico y Semáforo
 if 'df' not in st.session_state:
     datos_iniciales = {
         'Jersey': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 73, 87],
@@ -44,11 +44,14 @@ if 'df' not in st.session_state:
         'Posición': ['DL', 'WR', 'DB', 'QB', 'LB', 'DB', 'LB', 'DB', 'DB', 'DL', 'QB', 'DL', 'WR', 'OL', 'K'],
         'Unidad': ['Defensiva', 'Ofensiva', 'Defensiva', 'Ofensiva', 'Defensiva', 'Defensiva', 'Defensiva', 'Defensiva', 'Defensiva', 'Defensiva', 'Ofensiva', 'Defensiva', 'Ofensiva', 'Ofensiva', 'Equipos Especiales'],
         
+        # Estatus Médico / Disponibilidad
+        'Estatus_Medico': ['Activo', 'Activo', 'Precaución Médica', 'Activo', 'Activo', 'Activo', 'Activo', 'Activo', 'Activo', 'Activo', 'Activo', 'Activo', 'Activo', 'Activo', 'Activo'],
+        
         # Contadores de eventos
         'Partidos_Jugados': [1]*15,
         'Entrenamientos_Asistidos': [1]*15,
         
-        # Métricas de Partido
+        # Métricas de Partido y Entrenamientos
         'Yardas_Partidos': [0]*15,
         'Tackleadas_Partidos': [0]*15,
         'Intercepciones_Partidos': [0]*15,
@@ -58,20 +61,21 @@ if 'df' not in st.session_state:
         'Goles_Campo_Partidos': [0]*15,
         'Puntos_Extra_Partidos': [0]*15,
         
-        # Métricas de Entrenamiento
         'Yardas_Entrenamientos': [0]*15,
         'Tackleadas_Entrenamientos': [0]*15,
         'Intercepciones_Entrenamientos': [0]*15,
         'Pancakes_Entrenamientos': [0]*15,
         'Sacks_Permitidos_Entrenamientos': [0]*15,
         'Sacks_QB_Entrenamientos': [0]*15,
-        'Goles_Campo_Entrenamientos': [0]*15,
-        'Puntos_Extra_Entrenamientos': [0]*15,
         
-        # Bienestar Continuo / Unificado
-        'Carga_Mental_Actual': [0]*15,
-        'Sueno_Actual': [0]*15,
-        'Fatiga_Actual': [0]*15
+        # Bienestar Actual
+        'Carga_Mental_Actual': [5]*15,
+        'Sueno_Actual': [7]*15,
+        'Fatiga_Actual': [4]*15,
+        
+        # Historial simulado para gráficas de tendencia (últimas 3 semanas)
+        'Historial_Fatiga': [[4, 5, 4]]*15,
+        'Historial_Carga': [[5, 6, 5]]*15
     }
     st.session_state.df = pd.DataFrame(datos_iniciales)
 
@@ -105,14 +109,15 @@ with tab4:
         col_a, col_b = st.columns(2)
         
         with col_a:
-            st.subheader("Estado Psicodeportivo (Continuo)")
-            carga_nueva = st.slider("Carga Mental / Estrés Semanal (1-10)", 1, 10, 5)
-            sueno_nuevo = st.slider("Horas de Sueño Promedio", 1, 12, 7)
-            fatiga_nueva = st.slider("Nivel de Fatiga Física Actual (1-10)", 1, 10, 5)
+            st.subheader("Estado Psicodeportivo Actual")
+            carga_nueva = st.slider("Carga Mental / Estrés (1-10)", 1, 10, int(st.session_state.df.at[idx, 'Carga_Mental_Actual']))
+            sueno_nuevo = st.slider("Horas de Sueño", 1, 12, int(st.session_state.df.at[idx, 'Sueno_Actual']))
+            fatiga_nueva = st.slider("Nivel de Fatiga Física (1-10)", 1, 10, int(st.session_state.df.at[idx, 'Fatiga_Actual']))
+            
+            nuevo_estatus = st.selectbox("Estatus Médico / Disponibilidad", ["Activo", "Precaución Médica", "Lesionado / Inactivo"], index=["Activo", "Precaución Médica", "Lesionado / Inactivo"].index(st.session_state.df.at[idx, 'Estatus_Medico']) if st.session_state.df.at[idx, 'Estatus_Medico'] in ["Activo", "Precaución Médica", "Lesionado / Inactivo"] else 0)
 
         with col_b:
             st.subheader("Rendimiento Registrado")
-            
             n_yardas, n_tackleadas, n_intercepciones = 0, 0, 0
             n_pancakes, n_sacks_perm, n_sacks_qb = 0, 0, 0
             n_gc, n_pe = 0, 0
@@ -135,12 +140,24 @@ with tab4:
         submitted = st.form_submit_button("Guardar Registro")
         
         if submitted:
-            # Actualizar estado de bienestar unificado
+            # Actualizar estatus y bienestar
+            st.session_state.df.at[idx, 'Estatus_Medico'] = nuevo_estatus
             st.session_state.df.at[idx, 'Carga_Mental_Actual'] = carga_nueva
             st.session_state.df.at[idx, 'Sueno_Actual'] = sueno_nuevo
             st.session_state.df.at[idx, 'Fatiga_Actual'] = fatiga_nueva
             
-            # Acumular estadísticas según el tipo de evento
+            # Actualizar historial de fatiga para gráficas de tendencia
+            hist_fatiga = st.session_state.df.at[idx, 'Historial_Fatiga']
+            hist_fatiga.append(fatiga_nueva)
+            if len(hist_fatiga) > 5: hist_fatiga.pop(0)
+            st.session_state.df.at[idx, 'Historial_Fatiga'] = hist_fatiga
+            
+            hist_carga = st.session_state.df.at[idx, 'Historial_Carga']
+            hist_carga.append(carga_nueva)
+            if len(hist_carga) > 5: hist_carga.pop(0)
+            st.session_state.df.at[idx, 'Historial_Carga'] = hist_carga
+
+            # Acumular campo
             if tipo_evento == "Partido":
                 st.session_state.df.at[idx, 'Partidos_Jugados'] += 1
                 st.session_state.df.at[idx, 'Yardas_Partidos'] += n_yardas
@@ -159,67 +176,70 @@ with tab4:
                 st.session_state.df.at[idx, 'Pancakes_Entrenamientos'] += n_pancakes
                 st.session_state.df.at[idx, 'Sacks_Permitidos_Entrenamientos'] += n_sacks_perm
                 st.session_state.df.at[idx, 'Sacks_QB_Entrenamientos'] += n_sacks_qb
-                st.session_state.df.at[idx, 'Goles_Campo_Entrenamientos'] += n_gc
-                st.session_state.df.at[idx, 'Puntos_Extra_Entrenamientos'] += n_pe
             
-            st.success(f"✅ ¡Registro de {tipo_evento} guardado para {jugador_seleccionado}!")
+            st.success(f"✅ ¡Registro guardado para {jugador_seleccionado}!")
 
-# --- PESTAÑA 3: RENDIMIENTO DEL EQUIPO ---
+# --- PESTAÑA 3: RENDIMIENTO DEL EQUIPO Y REPORTES ---
 with tab3:
-    st.header("Análisis General por Unidades")
+    st.header("Análisis General y Reportes Ejecutivos")
     df_global = st.session_state.df.copy()
-    col_of, col_def, col_st = st.columns(3)
     
+    col_of, col_def, col_st = st.columns(3)
     with col_of:
         st.subheader("🏈 Ofensiva")
         of_df = df_global[df_global['Unidad'] == 'Ofensiva']
-        st.metric("Yardas Totales (Partidos)", int(of_df['Yardas_Partidos'].sum()))
-        st.metric("Yardas Totales (Entrenamientos)", int(of_df['Yardas_Entrenamientos'].sum()))
-        st.metric("Promedio Carga Mental", f"{of_df['Carga_Mental_Actual'].mean():.1f}/10" if not of_df.empty else "0/10")
+        st.metric("Yardas Partidos", int(of_df['Yardas_Partidos'].sum()))
+        st.metric("Promedio Carga Mental", f"{of_df['Carga_Mental_Actual'].mean():.1f}/10")
         
     with col_def:
         st.subheader("🛡️ Defensiva")
         def_df = df_global[df_global['Unidad'] == 'Defensiva']
-        st.metric("Tackleadas (Partidos)", int(def_df['Tackleadas_Partidos'].sum()))
-        st.metric("Tackleadas (Entrenamientos)", int(def_df['Tackleadas_Entrenamientos'].sum()))
-        st.metric("Promedio Carga Mental", f"{def_df['Carga_Mental_Actual'].mean():.1f}/10" if not def_df.empty else "0/10")
+        st.metric("Tackleadas Partidos", int(def_df['Tackleadas_Partidos'].sum()))
+        st.metric("Promedio Carga Mental", f"{def_df['Carga_Mental_Actual'].mean():.1f}/10")
         
     with col_st:
         st.subheader("🦵 Equipos Especiales")
         st_df = df_global[df_global['Unidad'] == 'Equipos Especiales']
-        st.metric("Puntos (Partidos)", int((st_df['Goles_Campo_Partidos'].sum() * 3) + (st_df['Puntos_Extra_Partidos'].sum() * 1)))
-        st.metric("Puntos (Entrenamientos)", int((st_df['Goles_Campo_Entrenamientos'].sum() * 3) + (st_df['Puntos_Extra_Entrenamientos'].sum() * 1)))
-        st.metric("Promedio Carga Mental", f"{st_df['Carga_Mental_Actual'].mean():.1f}/10" if not st_df.empty else "0/10")
+        st.metric("Puntos Partidos", int((st_df['Goles_Campo_Partidos'].sum() * 3) + (st_df['Puntos_Extra_Partidos'].sum() * 1)))
+        st.metric("Promedio Carga Mental", f"{st_df['Carga_Mental_Actual'].mean():.1f}/10")
+
+    st.divider()
+    st.subheader("📥 Exportar Reporte Semanal para Head Coach")
+    st.write("Descarga la base de datos completa con los estatus médicos y métricas de bienestar actualizadas para compartir por WhatsApp o correo.")
+    
+    csv_data = df_global.to_csv(index=False).encode('utf-8')
+    st.download_button(
+        label="📥 Descargar Reporte en CSV",
+        data=csv_data,
+        file_name='reporte_semanal_pumas_cu.csv',
+        mime='text/csv',
+    )
 
 # --- PESTAÑA 2: BASE DE DATOS Y EDICIÓN ---
 with tab2:
-    st.subheader("Gestión del Roster y Estadísticas")
+    st.subheader("Gestión del Roster y Estatus Médico")
     df_editado = st.data_editor(st.session_state.df, num_rows="dynamic", use_container_width=True, hide_index=True)
     if st.button("Guardar Cambios Globales"):
         st.session_state.df = df_editado
         st.success("¡Base de datos actualizada correctamente!")
 
-# --- PESTAÑA 1: ANÁLISIS DEL COACH ---
+# --- PESTAÑA 1: ANÁLISIS INDIVIDUAL CON SEMÁFORO Y TENDENCIAS ---
 with tab1:
     df = st.session_state.df.copy()
-    
     df['PJ_Calc'] = df['Partidos_Jugados'].replace(0, 1)
 
     st.subheader("Filtros de Búsqueda")
     if not df.empty:
         col_f1, col_f2, col_f3 = st.columns(3)
-        
         with col_f1:
             unidad_filtro = st.selectbox("Selecciona la Unidad", df['Unidad'].unique(), key="unidad_coach")
             
         posiciones_disponibles = df[df['Unidad'] == unidad_filtro]['Posición'].unique()
-        
         if len(posiciones_disponibles) > 0:
             with col_f2:
                 posicion_filtro = st.selectbox("Selecciona la Posición", posiciones_disponibles, key="posicion_coach")
                 
             jugadores_disponibles = df[df['Posición'] == posicion_filtro]['Jugador']
-            
             if not jugadores_disponibles.empty:
                 with col_f3:
                     jugador_filtro = st.selectbox("Selecciona al Jugador", jugadores_disponibles, key="jugador_coach")
@@ -228,46 +248,57 @@ with tab1:
                 pos = stats_jugador['Posición']
 
                 st.divider()
-                st.header(f"Análisis de: {jugador_filtro} - #{stats_jugador['Jersey']} ({pos})")
                 
+                # --- SEMÁFORO DE RIESGO Y DISPONIBILIDAD ---
+                estatus = stats_jugador['Estatus_Medico']
+                fatiga = stats_jugador['Fatiga_Actual']
+                carga = stats_jugador['Carga_Mental_Actual']
+                
+                col_title, col_semaforo = st.columns([2, 1])
+                with col_title:
+                    st.header(f"Análisis: {jugador_filtro} - #{stats_jugador['Jersey']} ({pos})")
+                
+                with col_semaforo:
+                    if estatus == "Lesionado / Inactivo" or fatiga >= 8 or carga >= 8:
+                        st.error("🔴 **ESTATUS: ALTO RIESGO / DESCANSO**")
+                    elif estatus == "Precaución Médica" or fatiga >= 6 or carga >= 6:
+                        st.warning("🟡 **ESTATUS: PRECAUCIÓN / MODERADO**")
+                    else:
+                        st.success("🟢 **ESTATUS: DISPONIBLE / ÓPTIMO**")
+
                 st.subheader("📊 Rendimiento: Partidos vs Entrenamientos")
                 col1, col2, col3 = st.columns(3)
                 
                 if pos in ['QB', 'WR', 'RB']:
-                    with col1: st.metric(label="Yardas en Partidos", value=int(stats_jugador['Yardas_Partidos']))
-                    with col2: st.metric(label="Yardas en Entrenamientos", value=int(stats_jugador['Yardas_Entrenamientos']))
-                    with col3: st.metric(label="Proyección Temp. (10 Partidos)", value=int((stats_jugador['Yardas_Partidos'] / stats_jugador['PJ_Calc']) * 10), delta="Ritmo de Juego")
-                
+                    with col1: st.metric("Yardas Partidos", int(stats_jugador['Yardas_Partidos']))
+                    with col2: st.metric("Yardas Entrenamientos", int(stats_jugador['Yardas_Entrenamientos']))
+                    with col3: st.metric("Proyección Temp. (10 J)", int((stats_jugador['Yardas_Partidos'] / stats_jugador['PJ_Calc']) * 10))
                 elif pos == 'OL':
-                    with col1: st.metric(label="Pancakes (Partidos)", value=int(stats_jugador['Pancakes_Partidos']))
-                    with col2: st.metric(label="Pancakes (Entrenamientos)", value=int(stats_jugador['Pancakes_Entrenamientos']))
-                    with col3: st.metric(label="Sacks Permitidos (Partidos)", value=int(stats_jugador['Sacks_Permitidos_Partidos']))
-                
+                    with col1: st.metric("Pancakes (Partidos)", int(stats_jugador['Pancakes_Partidos']))
+                    with col2: st.metric("Pancakes (Entrenamientos)", int(stats_jugador['Pancakes_Entrenamientos']))
+                    with col3: st.metric("Sacks Permitidos", int(stats_jugador['Sacks_Permitidos_Partidos']))
                 elif pos in ['DL', 'LB']:
-                    with col1: st.metric(label="Tackleadas (Partidos)", value=int(stats_jugador['Tackleadas_Partidos']))
-                    with col2: st.metric(label="Tackleadas (Entrenamientos)", value=int(stats_jugador['Tackleadas_Entrenamientos']))
-                    with col3: st.metric(label="Proyección Tackles (10 Partidos)", value=int((stats_jugador['Tackleadas_Partidos'] / stats_jugador['PJ_Calc']) * 10), delta="Ritmo de Juego")
-                
+                    with col1: st.metric("Tackleadas (Partidos)", int(stats_jugador['Tackleadas_Partidos']))
+                    with col2: st.metric("Tackleadas (Entrenamientos)", int(stats_jugador['Tackleadas_Entrenamientos']))
+                    with col3: st.metric("Proyección Tackles (10 J)", int((stats_jugador['Tackleadas_Partidos'] / stats_jugador['PJ_Calc']) * 10))
                 elif pos == 'DB':
-                    with col1: st.metric(label="Intercepciones (Partidos)", value=int(stats_jugador['Intercepciones_Partidos']))
-                    with col2: st.metric(label="Intercepciones (Entrenamientos)", value=int(stats_jugador['Intercepciones_Entrenamientos']))
-                    with col3: st.metric(label="Tackleadas (Partidos)", value=int(stats_jugador['Tackleadas_Partidos']))
-                
+                    with col1: st.metric("Intercepciones (Partidos)", int(stats_jugador['Intercepciones_Partidos']))
+                    with col2: st.metric("Intercepciones (Entrenamientos)", int(stats_jugador['Intercepciones_Entrenamientos']))
+                    with col3: st.metric("Tackleadas (Partidos)", int(stats_jugador['Tackleadas_Partidos']))
                 elif pos in ['K', 'P']:
-                    with col1: st.metric(label="Goles de Campo (Partidos)", value=int(stats_jugador['Goles_Campo_Partidos']))
-                    with col2: st.metric(label="Goles de Campo (Entrenamientos)", value=int(stats_jugador['Goles_Campo_Entrenamientos']))
-                    with col3: st.metric(label="Puntos Totales (Partidos)", value=int((stats_jugador['Goles_Campo_Partidos'] * 3) + stats_jugador['Puntos_Extra_Partidos']))
+                    with col1: st.metric("Goles de Campo (Partidos)", int(stats_jugador['Goles_Campo_Partidos']))
+                    with col2: st.metric("Goles de Campo (Entrenos)", int(stats_jugador['Goles_Campo_Entrenamientos']))
+                    with col3: st.metric("Puntos Totales", int((stats_jugador['Goles_Campo_Partidos'] * 3) + stats_jugador['Puntos_Extra_Partidos']))
 
                 st.divider()
 
-                st.subheader("🧠 Monitoreo Psicodeportivo Actual")
+                st.subheader("🧠 Monitoreo Psicodeportivo y Tendencias Históricas")
                 col4, col5, col6 = st.columns(3)
-                with col4: st.metric(label="Carga Mental / Estrés", value=f"{stats_jugador['Carga_Mental_Actual']}/10")
-                with col5: st.metric(label="Horas de Sueño", value=f"{stats_jugador['Sueno_Actual']} hrs")
-                with col6: st.metric(label="Fatiga Física", value=f"{stats_jugador['Fatiga_Actual']}/10")
+                with col4: st.metric("Carga Mental Actual", f"{carga}/10")
+                with col5: st.metric("Horas de Sueño", f"{stats_jugador['Sueno_Actual']} hrs")
+                with col6: st.metric("Fatiga Física Actual", f"{fatiga}/10")
 
-                # Alertas inteligentes basadas en el estado actual del atleta
-                if stats_jugador['Carga_Mental_Actual'] >= 8 or stats_jugador['Fatiga_Actual'] >= 8:
-                    st.error("🚨 ALERTA: El atleta presenta niveles críticos de fatiga o carga mental. Se recomienda descanso o seguimiento psicológico prioritario.")
-                else:
-                    st.success("✅ El atleta se encuentra dentro de los parámetros estables de bienestar.")
+                # Gráficas de tendencia histórica de fatiga y estrés
+                st.write("📈 **Tendencia de Fatiga Reciente (Últimos registros):**")
+                df_tendencia_fatiga = pd.DataFrame({'Fatiga': stats_jugador['Historial_Fatiga']})
+                st.line_chart(df_tendencia_fatiga)
