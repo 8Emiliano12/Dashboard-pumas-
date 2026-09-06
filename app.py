@@ -129,7 +129,7 @@ if 'df' not in st.session_state:
         'Partidos_Programados': [1]*n_jugadores,
         'Partidos_Convocados': [1]*n_jugadores,
         
-        # Rendimiento en campo (Partidos) - Separando Passing y Rushing
+        # Rendimiento en campo (Partidos)
         'Yardas_Pase_Partidos': [0.0]*n_jugadores,
         'Yardas_Acarreo_Partidos': [0.0]*n_jugadores,
         'Pases_Intentados_Partidos': [0]*n_jugadores,
@@ -596,7 +596,7 @@ with tab6:
     
     st.dataframe(df_calendario, use_container_width=True, hide_index=True)
 
-# --- PESTAÑA 3: BOX SCORE OFICIAL (PASSING & RUSHING SEPARADOS) ---
+# --- PESTAÑA 3: BOX SCORE OFICIAL ---
 with tab3:
     st.header("Box Score Oficial y Estadísticas por Categoría")
     st.write("Puedes modificar cualquier número o nombre directamente sobre las tablas del Box Score.")
@@ -632,7 +632,7 @@ with tab3:
             'Jersey': 'NO.', 'Jugador': 'JUGADOR', 'Posición': 'POS', 'Tackleadas_Efectivas_Partidos': 'TACKLES', 'Capturas_QB_Sacks_Partidos': 'SACKS', 'Intercepciones_Partidos': 'INT'
         })
         box_def_edit = st.data_editor(box_defense, use_container_width=True, hide_index=True, key="box_def_edit")
-        if not box_def_edit.equals(box_def):
+        if not box_def_edit.equals(box_defense):
             st.success("Box score defensivo actualizado.")
 
     st.markdown("### KICKING & SPECIAL TEAMS")
