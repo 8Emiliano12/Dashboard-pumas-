@@ -138,6 +138,7 @@ if 'df' not in st.session_state:
         'Capturas_Permitidas_Partidos': [0]*n_jugadores,
         'Tackleadas_Efectivas_Partidos': [0]*n_jugadores,
         'Intercepciones_Partidos': [0]*n_jugadores,
+        'Pases_Desviados_Partidos': [0]*n_jugadores, # Nuevo campo para PBU
         'Capturas_QB_Sacks_Partidos': [0.0]*n_jugadores,
         'Goles_Campo_Partidos': [0]*n_jugadores,
         'Puntos_Extra_Partidos': [0]*n_jugadores,
@@ -151,6 +152,7 @@ if 'df' not in st.session_state:
         'Capturas_Permitidas_Entrenos': [0]*n_jugadores,
         'Tackleadas_Efectivas_Entrenos': [0]*n_jugadores,
         'Intercepciones_Entrenos': [0]*n_jugadores,
+        'Pases_Desviados_Entrenos': [0]*n_jugadores,
         'Capturas_QB_Sacks_Entrenos': [0.0]*n_jugadores,
         
         # Psico 1
@@ -323,7 +325,7 @@ with tab4:
                         st.success("Sack permitido registrado.")
 
             elif pos_live in ['DL', 'LB']:
-                col_d1, col_d2 = st.columns(2)
+                col_d1, col_d2, col_d3 = st.columns(3)
                 with col_d1:
                     if st.button("Tackleada Efectiva"):
                         st.session_state.df.at[idx_live, 'Tackleadas_Efectivas_Partidos'] += 1
@@ -332,9 +334,13 @@ with tab4:
                     if st.button("Sack Defensivo"):
                         st.session_state.df.at[idx_live, 'Capturas_QB_Sacks_Partidos'] += 1.0
                         st.success("Sack registrado.")
+                with col_d3:
+                    if st.button("Pase Desviado / Bloqueado (PBU)"):
+                        st.session_state.df.at[idx_live, 'Pases_Desviados_Partidos'] += 1
+                        st.success("Pase desviado (PBU) registrado.")
 
             elif pos_live in ['DB', 'CB']:
-                col_db1, col_db2 = st.columns(2)
+                col_db1, col_db2, col_db3 = st.columns(3)
                 with col_db1:
                     if st.button("Tackleada Efectiva"):
                         st.session_state.df.at[idx_live, 'Tackleadas_Efectivas_Partidos'] += 1
@@ -343,6 +349,10 @@ with tab4:
                     if st.button("Intercepción (INT)"):
                         st.session_state.df.at[idx_live, 'Intercepciones_Partidos'] += 1
                         st.success("Intercepción registrada.")
+                with col_db3:
+                    if st.button("Pase Desviado / Bloqueado (PBU)"):
+                        st.session_state.df.at[idx_live, 'Pases_Desviados_Partidos'] += 1
+                        st.success("Pase desviado (PBU) registrado.")
 
             elif pos_live == 'K':
                 col_k1, col_k2 = st.columns(2)
@@ -399,7 +409,7 @@ with tab4:
                 
                 n_ypase_ent, n_yrush_ent, n_p_int_ent, n_p_comp_ent = 0.0, 0.0, 0, 0
                 n_pancakes_ent, n_sacks_perm_ent = 0, 0
-                n_tack_ent, n_int_ent, n_sacks_def_ent = 0, 0, 0.0
+                n_tack_ent, n_int_ent, n_pbu_ent, n_sacks_def_ent = 0, 0, 0, 0.0
 
                 if pos_ent == 'QB':
                     n_ypase_ent = st.number_input("Yardas Aéreas (Passing) en Práctica", min_value=-10.0, value=0.0)
@@ -417,9 +427,11 @@ with tab4:
                 elif pos_ent in ['DL', 'LB']:
                     n_tack_ent = st.number_input("Tackleadas Efectivas en Práctica", min_value=0, value=0)
                     n_sacks_def_ent = st.number_input("Sacks Defensivos en Práctica", min_value=0.0, value=0.0, step=0.5)
+                    n_pbu_ent = st.number_input("Pases Desviados / PBU en Práctica", min_value=0, value=0)
                 elif pos_ent in ['DB', 'CB']:
                     n_tack_ent = st.number_input("Tackleadas Efectivas en Práctica", min_value=0, value=0)
                     n_int_ent = st.number_input("Intercepciones en Práctica", min_value=0, value=0)
+                    n_pbu_ent = st.number_input("Pases Desviados / PBU en Práctica", min_value=0, value=0)
 
                 guardar_entreno_btn = st.form_submit_button("Guardar Registro Completo de Práctica")
                 if guardar_entreno_btn:
@@ -441,6 +453,7 @@ with tab4:
                     st.session_state.df.at[idx_ent, 'Capturas_Permitidas_Entrenos'] += n_sacks_perm_ent
                     st.session_state.df.at[idx_ent, 'Tackleadas_Efectivas_Entrenos'] += n_tack_ent
                     st.session_state.df.at[idx_ent, 'Intercepciones_Entrenos'] += n_int_ent
+                    st.session_state.df.at[idx_ent, 'Pases_Desviados_Entrenos'] += n_pbu_ent
                     st.session_state.df.at[idx_ent, 'Capturas_QB_Sacks_Entrenos'] += n_sacks_def_ent
 
                     hist_f = st.session_state.df.at[idx_ent, 'Historial_Fatiga']
@@ -552,11 +565,11 @@ with tab2:
             st.success("Estadísticas ofensivas actualizadas.")
 
     with sub_def:
-        st.subheader("Edición Directa: Rendimiento Defensivo")
+        st.subheader("Edición Directa: Rendimiento Defensivo (Incluyendo PBU)")
         df_def = st.session_state.df[st.session_state.df['Unidad'] == 'Defensiva'].copy()
         cols_def_view = [
             'Jersey', 'Jugador', 'Posición', 'Partidos_Convocados',
-            'Tackleadas_Efectivas_Partidos', 'Intercepciones_Partidos', 'Capturas_QB_Sacks_Partidos'
+            'Tackleadas_Efectivas_Partidos', 'Intercepciones_Partidos', 'Pases_Desviados_Partidos', 'Capturas_QB_Sacks_Partidos'
         ]
         df_def_edited = st.data_editor(df_def[cols_def_view], use_container_width=True, hide_index=True, key="edit_def_direct")
         if not df_def_edited.equals(df_def[cols_def_view]):
@@ -628,8 +641,9 @@ with tab3:
     st.markdown("### DEFENSE (FRONT 7 & SECUNDARIA)")
     df_def = df_global[df_global['Unidad'] == 'Defensiva'].copy()
     if not df_def.empty:
-        box_defense = df_def[['Jersey', 'Jugador', 'Posición', 'Tackleadas_Efectivas_Partidos', 'Capturas_QB_Sacks_Partidos', 'Intercepciones_Partidos']].rename(columns={
-            'Jersey': 'NO.', 'Jugador': 'JUGADOR', 'Posición': 'POS', 'Tackleadas_Efectivas_Partidos': 'TACKLES', 'Capturas_QB_Sacks_Partidos': 'SACKS', 'Intercepciones_Partidos': 'INT'
+        box_defense = df_def[['Jersey', 'Jugador', 'Posición', 'Tackleadas_Efectivas_Partidos', 'Capturas_QB_Sacks_Partidos', 'Intercepciones_Partidos', 'Pases_Desviados_Partidos']].rename(columns={
+            'Jersey': 'NO.', 'Jugador': 'JUGADOR', 'Posición': 'POS', 'Tackleadas_Efectivas_Partidos': 'TACKLES', 
+            'Capturas_QB_Sacks_Partidos': 'SACKS', 'Intercepciones_Partidos': 'INT', 'Pases_Desviados_Partidos': 'PBU (DEFLECTED)'
         })
         box_def_edit = st.data_editor(box_defense, use_container_width=True, hide_index=True, key="box_def_edit")
         if not box_def_edit.equals(box_defense):
@@ -703,7 +717,7 @@ with tab1:
                 with col_p2:
                     st.markdown(f"Convocatoria en Partidos: `{pct_partidos:.1f}%` ({partidos_jugados}/{partidos_tot})")
 
-                st.subheader("📈 Métricas de Rendimiento (Passing & Rushing)")
+                st.subheader("📈 Métricas de Rendimiento")
                 col1, col2, col3 = st.columns(3)
                 
                 pj = stats_jugador['PJ_Calc']
@@ -747,17 +761,18 @@ with tab1:
                 
                 elif pos in ['DL', 'LB']:
                     tackleadas_ppg = stats_jugador['Tackleadas_Efectivas_Partidos'] / pj
-                    tackleadas_ent = stats_jugador['Tackleadas_Efectivas_Entrenos']
-                    total_tackles = stats_jugador['Tackleadas_Efectivas_Partidos'] + tackleadas_ent
+                    pbus_tot = stats_jugador['Pases_Desviados_Partidos'] + stats_jugador['Pases_Desviados_Entrenos']
+                    sacks_tot = stats_jugador['Capturas_QB_Sacks_Partidos'] + stats_jugador['Capturas_QB_Sacks_Entrenos']
                     with col1: st.metric("PPG (Tackleadas / Partido)", f"{tackleadas_ppg:.1f}")
-                    with col2: st.metric("Tackleadas Prácticas", int(tackleadas_ent))
-                    with col3: st.metric("Total Sacks Defensivos", float(stats_jugador['Capturas_QB_Sacks_Partidos'] + stats_jugador['Capturas_QB_Sacks_Entrenos']))
+                    with col2: st.metric("Pases Desviados (PBU Total)", int(pbus_tot))
+                    with col3: st.metric("Total Sacks Defensivos", float(sacks_tot))
                 
                 elif pos in ['DB', 'CB']:
                     intercepciones_ppg = stats_jugador['Intercepciones_Partidos'] / pj
+                    pbus_tot = stats_jugador['Pases_Desviados_Partidos'] + stats_jugador['Pases_Desviados_Entrenos']
                     tackleadas_ppg = stats_jugador['Tackleadas_Efectivas_Partidos'] / pj
                     with col1: st.metric("PPG (Intercepciones / P.)", f"{intercepciones_ppg:.2f}")
-                    with col2: st.metric("AVG Tackleadas / Partido", f"{tackleadas_ppg:.1f}")
+                    with col2: st.metric("Pases Desviados (PBU Total)", int(pbus_tot))
                     with col3: st.metric("Total Intercepciones", int(stats_jugador['Intercepciones_Partidos'] + stats_jugador['Intercepciones_Entrenos']))
                 
                 elif pos == 'K':
