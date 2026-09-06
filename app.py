@@ -129,7 +129,7 @@ if 'df' not in st.session_state:
         'Partidos_Programados': [1]*n_jugadores,
         'Partidos_Convocados': [1]*n_jugadores,
         
-        # Rendimiento en campo
+        # Rendimiento en campo (Partidos)
         'Yardas_Producidas_Partidos': [0.0]*n_jugadores,
         'Pases_Intentados_Partidos': [0]*n_jugadores,
         'Pases_Completados_Partidos': [0]*n_jugadores,
@@ -141,6 +141,7 @@ if 'df' not in st.session_state:
         'Goles_Campo_Partidos': [0]*n_jugadores,
         'Puntos_Extra_Partidos': [0]*n_jugadores,
         
+        # Rendimiento en campo (Entrenamientos)
         'Yardas_Producidas_Entrenos': [0.0]*n_jugadores,
         'Pases_Intentados_Entrenos': [0]*n_jugadores,
         'Pases_Completados_Entrenos': [0]*n_jugadores,
@@ -182,12 +183,12 @@ tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
     "📅 Calendario"
 ])
 
-# --- PESTAÑA 4: REGISTRO DE DATOS EN VIVO (PARTIDOS O ENTRENAMIENTOS) ---
+# --- PESTAÑA 4: REGISTRO DE DATOS EN VIVO (PARTIDOS O ENTRENAMIENTOS CON TÉCNICA) ---
 with tab4:
     st.header("Registro de Datos y Mesa Táctil en Vivo")
-    st.write("Elige si vas a registrar un partido oficial o una sesión de entrenamiento con fecha editable.")
+    st.write("Elige el modo de operación para registrar estadísticas de partido o métricas técnicas y físicas en entrenamientos.")
 
-    tipo_modo_registro = st.radio("Modo de Operación:", ["Partido Oficial (Mesa Táctil)", "Entrenamiento Semanal (Calendario y Carga)"], horizontal=True, key="modo_reg_live")
+    tipo_modo_registro = st.radio("Modo de Operación:", ["Partido Oficial (Mesa Táctil)", "Entrenamiento Semanal (Mesa Técnica y Carga)"], horizontal=True, key="modo_reg_live")
 
     st.divider()
 
@@ -265,9 +266,8 @@ with tab4:
             pos_live = st.session_state.active_pos
 
             st.divider()
-            st.subheader(f"Registrar Acciones para: {jugador_live} ({pos_live}) [{contexto_jornada}]")
+            st.subheader(f"Registrar Acciones de Partido para: {jugador_live} ({pos_live}) [{contexto_jornada}]")
 
-            # Asegurar incremento automático de partidos jugados al registrar la primera acción del partido
             if st.session_state.df.at[idx_live, 'Partidos_Convocados'] == 0:
                 st.session_state.df.at[idx_live, 'Partidos_Convocados'] = 1
 
@@ -341,12 +341,12 @@ with tab4:
                         st.success("Punto extra registrado.")
 
     else:
-        # Modo Entrenamiento con Calendario Editable
-        st.subheader("Registro y Carga de Entrenamiento")
+        # Modo Entrenamiento con Calendario Editable y Métricas Técnicas
+        st.subheader("Registro de Práctica: Carga Física y Técnica")
         
         col_cal1, col_cal2 = st.columns(2)
         with col_cal1:
-            fecha_entreno = st.date_input("📅 Selecciona la Fecha del Entrenamiento", value=date.today(), key="calendar_entreno_date")
+            fecha_entreno = st.date_input("📅 Fecha de la Práctica", value=date.today(), key="calendar_entreno_date")
         with col_cal2:
             sesion_tipo = st.selectbox("Tipo de Sesión", ["Práctica Táctica / Fuerte", "Práctica Ligera / Recuperación", "Entrenamiento Pre-partido"], key="tipo_sesion_entreno")
 
@@ -365,10 +365,13 @@ with tab4:
 
         if jugador_entreno_sel:
             idx_ent = st.session_state.df.index[st.session_state.df['Jugador'] == jugador_entreno_sel].tolist()[0]
+            pos_ent = st.session_state.df.at[idx_ent, 'Posición']
 
             with st.form("form_registro_entreno_live"):
-                st.markdown(f"**Registrando sesión para:** {jugador_entreno_sel} — Fecha: `{fecha_entreno}`")
+                st.markdown(f"**Registrando sesión para:** {jugador_entreno_sel} ({pos_ent}) — Fecha: `{fecha_entreno}`")
                 
+                st.markdown("---")
+                st.markdown("##### 🏋️ Bienestar y Carga Física")
                 fatiga_ent_val = st.slider("Fatiga Física Acumulada (1-10)", 1, 10, int(st.session_state.df.at[idx_ent, 'Fatiga_Entreno']))
                 dolor_ent_val = st.slider("Dolor Muscular / Molestias (1-10)", 1, 10, int(st.session_state.df.at[idx_ent, 'Dolor_Muscular']))
                 recup_ent_val = st.slider("Nivel de Recuperación / Frescura (1-10)", 1, 10, int(st.session_state.df.at[idx_ent, 'Recuperacion_Entreno']))
@@ -376,7 +379,31 @@ with tab4:
                 asist_ent_val = st.selectbox("Asistencia a la Sesión", ["Asistió", "No Asistió"])
                 estatus_med_val = st.selectbox("Estatus Médico", ["Activo", "Precaución Médica", "Lesionado / Inactivo"])
 
-                guardar_entreno_btn = st.form_submit_button("Guardar Registro de Entrenamiento")
+                st.markdown("---")
+                st.markdown("##### 🏈 Rendimiento Técnico en Práctica")
+                
+                n_yds_ent, n_p_int_ent, n_p_comp_ent = 0, 0, 0
+                n_pancakes_ent, n_sacks_perm_ent = 0, 0
+                n_tack_ent, n_int_ent, n_sacks_def_ent = 0, 0, 0.0
+
+                if pos_ent == 'QB':
+                    n_yds_ent = st.number_input("Yardas Lanzadas / Acarreo en Práctica", min_value=-10, value=0)
+                    col_ep1, col_ep2 = st.columns(2)
+                    with col_ep1: n_p_comp_ent = st.number_input("Pases Completados en Práctica", min_value=0, value=0)
+                    with col_ep2: n_p_int_ent = st.number_input("Pases Intentados en Práctica", min_value=0, value=0)
+                elif pos_ent in ['WR', 'RB']:
+                    n_yds_ent = st.number_input("Yardas Ganadas en Práctica", min_value=-5, value=0)
+                elif pos_ent == 'OL':
+                    n_pancakes_ent = st.number_input("Bloqueos de Dominio (Pancakes) en Práctica", min_value=0, value=0)
+                    n_sacks_perm_ent = st.number_input("Sacks Permitidos en Práctica", min_value=0, value=0)
+                elif pos_ent in ['DL', 'LB']:
+                    n_tack_ent = st.number_input("Tackleadas Efectivas en Práctica", min_value=0, value=0)
+                    n_sacks_def_ent = st.number_input("Sacks Defensivos en Práctica", min_value=0.0, value=0.0, step=0.5)
+                elif pos_ent in ['DB', 'CB']:
+                    n_tack_ent = st.number_input("Tackleadas Efectivas en Práctica", min_value=0, value=0)
+                    n_int_ent = st.number_input("Intercepciones en Práctica", min_value=0, value=0)
+
+                guardar_entreno_btn = st.form_submit_button("Guardar Registro Completo de Práctica")
                 if guardar_entreno_btn:
                     st.session_state.df.at[idx_ent, 'Entrenos_Programados'] += 1
                     if asist_ent_val == "Asistió":
@@ -387,12 +414,22 @@ with tab4:
                     st.session_state.df.at[idx_ent, 'Recuperacion_Entreno'] = recup_ent_val
                     st.session_state.df.at[idx_ent, 'Estatus_Medico'] = estatus_med_val
 
+                    # Acumular métricas técnicas de entreno
+                    st.session_state.df.at[idx_ent, 'Yardas_Producidas_Entrenos'] += n_yds_ent
+                    st.session_state.df.at[idx_ent, 'Pases_Intentados_Entrenos'] += n_p_int_ent
+                    st.session_state.df.at[idx_ent, 'Pases_Completados_Entrenos'] += n_p_comp_ent
+                    st.session_state.df.at[idx_ent, 'Bloqueos_Dominio_Entrenos'] += n_pancakes_ent
+                    st.session_state.df.at[idx_ent, 'Capturas_Permitidas_Entrenos'] += n_sacks_perm_ent
+                    st.session_state.df.at[idx_ent, 'Tackleadas_Efectivas_Entrenos'] += n_tack_ent
+                    st.session_state.df.at[idx_ent, 'Intercepciones_Entrenos'] += n_int_ent
+                    st.session_state.df.at[idx_ent, 'Capturas_QB_Sacks_Entrenos'] += n_sacks_def_ent
+
                     hist_f = st.session_state.df.at[idx_ent, 'Historial_Fatiga']
                     hist_f.append(fatiga_ent_val)
                     if len(hist_f) > 5: hist_f.pop(0)
                     st.session_state.df.at[idx_ent, 'Historial_Fatiga'] = hist_f
 
-                    st.success(f"Entrenamiento del {fecha_entreno} guardado exitosamente para {jugador_entreno_sel}.")
+                    st.success(f"Práctica del {fecha_entreno} guardada exitosamente para {jugador_entreno_sel}.")
 
 # --- PESTAÑA 5: EVALUACIÓN PSICODEPORTIVA ---
 with tab5:
@@ -645,7 +682,7 @@ with tab1:
                 with col_p2:
                     st.markdown(f"Convocatoria en Partidos: `{pct_partidos:.1f}%` ({partidos_jugados}/{partidos_tot})")
 
-                st.subheader("Métricas de Rendimiento (PPG & AVG)")
+                st.subheader("Métricas de Rendimiento (Partidos & Entrenamientos)")
                 col1, col2, col3 = st.columns(3)
                 
                 pj = stats_jugador['PJ_Calc']
@@ -656,36 +693,37 @@ with tab1:
                     completados_tot = stats_jugador['Pases_Completados_Partidos']
                     pct_comp = (completados_tot / intentos_tot * 100) if intentos_tot > 0 else 0.0
                     yardas_ppg = stats_jugador['Yardas_Producidas_Partidos'] / pj
+                    yardas_ent = stats_jugador['Yardas_Producidas_Entrenos']
                     with col1: st.metric("PPG (Yardas / Partido)", f"{yardas_ppg:.1f} yds")
                     with col2: st.metric("AVG Pases (Comp / Int)", f"{pct_comp:.1f}%", f"{completados_tot}/{intentos_tot}")
-                    with col3: st.metric("Total Yardas Acumuladas", int(stats_jugador['Yardas_Producidas_Partidos']))
+                    with col3: st.metric("Yardas en Entrenos", int(yardas_ent))
                 elif pos in ['WR', 'RB']:
                     yardas_ppg = stats_jugador['Yardas_Producidas_Partidos'] / pj
-                    yardas_avg_entreno = stats_jugador['Yardas_Producidas_Entrenos'] / pe
+                    yardas_ent = stats_jugador['Yardas_Producidas_Entrenos']
                     with col1: st.metric("PPG (Yardas / Partido)", f"{yardas_ppg:.1f} yds")
-                    with col2: st.metric("AVG Yardas / Entreno", f"{yardas_avg_entreno:.1f} yds")
-                    with col3: st.metric("Total Yardas Acumuladas", int(stats_jugador['Yardas_Producidas_Partidos'] + stats_jugador['Yardas_Producidas_Entrenos']))
+                    with col2: st.metric("Yardas Acumuladas Prácticas", int(yardas_ent))
+                    with col3: st.metric("Total Yardas Globales", int(stats_jugador['Yardas_Producidas_Partidos'] + yardas_ent))
                 
                 elif pos == 'OL':
                     pancakes_ppg = stats_jugador['Bloqueos_Dominio_Partidos'] / pj
-                    sacks_permitidos = stats_jugador['Capturas_Permitidas_Partidos']
-                    with col1: st.metric("PPG (Bloqueos Dominio / P.)", f"{pancakes_ppg:.1f}")
-                    with col2: st.metric("AVG Bloqueos / Entreno", f"{stats_jugador['Bloqueos_Dominio_Entrenos'] / pe:.1f}")
-                    with col3: st.metric("Capturas Permitidas (Total)", int(sacks_permitidos))
+                    pancakes_ent = stats_jugador['Bloqueos_Dominio_Entrenos']
+                    with col1: st.metric("PPG (Pancakes / Partido)", f"{pancakes_ppg:.1f}")
+                    with col2: st.metric("Pancakes en Prácticas", int(pancakes_ent))
+                    with col3: st.metric("Sacks Permitidos (Total)", int(stats_jugador['Capturas_Permitidas_Partidos'] + stats_jugador['Capturas_Permitidas_Entrenos']))
                 
                 elif pos in ['DL', 'LB']:
                     tackleadas_ppg = stats_jugador['Tackleadas_Efectivas_Partidos'] / pj
-                    sacks_ppg = stats_jugador['Capturas_QB_Sacks_Partidos'] / pj
+                    tackleadas_ent = stats_jugador['Tackleadas_Efectivas_Entrenos']
                     with col1: st.metric("PPG (Tackleadas / Partido)", f"{tackleadas_ppg:.1f}")
-                    with col2: st.metric("AVG Sacks / Partido", f"{sacks_ppg:.2f}")
-                    with col3: st.metric("Total Sacks (Partidos)", int(stats_jugador['Capturas_QB_Sacks_Partidos']))
+                    with col2: st.metric("Tackleadas en Prácticas", int(tackleadas_ent))
+                    with col3: st.metric("Total Sacks Defensivos", float(stats_jugador['Capturas_QB_Sacks_Partidos'] + stats_jugador['Capturas_QB_Sacks_Entrenos']))
                 
                 elif pos in ['DB', 'CB']:
                     intercepciones_ppg = stats_jugador['Intercepciones_Partidos'] / pj
                     tackleadas_ppg = stats_jugador['Tackleadas_Efectivas_Partidos'] / pj
                     with col1: st.metric("PPG (Intercepciones / P.)", f"{intercepciones_ppg:.2f}")
                     with col2: st.metric("AVG Tackleadas / Partido", f"{tackleadas_ppg:.1f}")
-                    with col3: st.metric("Total Intercepciones", int(stats_jugador['Intercepciones_Partidos']))
+                    with col3: st.metric("Total Intercepciones", int(stats_jugador['Intercepciones_Partidos'] + stats_jugador['Intercepciones_Entrenos']))
                 
                 elif pos == 'K':
                     goles_campo = stats_jugador['Goles_Campo_Partidos']
