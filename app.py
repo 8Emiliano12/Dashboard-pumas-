@@ -30,7 +30,7 @@ if not check_password():
 # ==========================================
 st.title("Panel de Control: Rendimiento y Bienestar - Pumas CU")
 
-# 1. Base de datos con el Roster Completo Precargado (Equipos Especiales solo K)
+# 1. Base de datos con el Roster Completo Precargado
 if 'df' not in st.session_state:
     roster_data = [
         (0, "Jioshi Alexander Morrison González", "DL"),
@@ -404,7 +404,7 @@ with tab2:
         "Estatus Médico", 
         "Unidad Ofensiva", 
         "Unidad Defensiva", 
-        "Equipos Especiales (Solo K)"
+        "Equipos Especiales"
     ])
 
     with sub_psi:
@@ -511,7 +511,7 @@ with tab3:
         if not box_def_edit.equals(box_defense):
             st.success("Box score defensivo actualizado.")
 
-    st.markdown("### KICKING & SPECIAL TEAMS (SOLO K)")
+    st.markdown("### KICKING & SPECIAL TEAMS")
     df_st = df_global[df_global['Posición'] == 'K'].copy()
     if not df_st.empty:
         box_st = df_st[['Jersey', 'Jugador', 'Posición', 'Goles_Campo_Partidos', 'Puntos_Extra_Partidos']].rename(columns={
