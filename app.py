@@ -30,7 +30,7 @@ if not check_password():
 # ==========================================
 st.title("Panel de Control: Rendimiento y Bienestar - Pumas CU")
 
-# 1. Base de datos con el Roster Completo Precargado
+# 1. Base de datos con el Roster Completo Precargado (Equipos Especiales solo K)
 if 'df' not in st.session_state:
     roster_data = [
         (0, "Jioshi Alexander Morrison González", "DL"),
@@ -38,7 +38,7 @@ if 'df' not in st.session_state:
         (2, "Aarón Soriano Vacaseydel", "DB"),
         (3, "Leonardo David Garza Peña Villamil", "QB"),
         (4, "Diego Mercado Sánchez", "LB"),
-        (5, "Julio César Hernández Hernández", "PB"),
+        (5, "Julio César Hernández Hernández", "DB"),
         (6, "Abraham González López", "LB"),
         (7, "Luis Miguel Bañuelos Medina", "DB"),
         (8, "Luis Higelin Castañón", "DB"),
@@ -57,7 +57,7 @@ if 'df' not in st.session_state:
         (22, "Juan Pablo Acosta Gutiérrez", "LB"),
         (23, "Rodrigo Pérez Rivera", "RB"),
         (24, "David Ceballos Gutiérrez", "CB"),
-        (25, "Diego Jack Cerda Álvarez", "PB"),
+        (25, "Diego Jack Cerda Álvarez", "DB"),
         (26, "Luis Antonio Schrader Rodríguez", "RB"),
         (27, "Rodrigo Eugenio Villegas Delgado", "LB"),
         (28, "Sergio Alejandro Cervantes Franzoni", "LB"),
@@ -87,7 +87,7 @@ if 'df' not in st.session_state:
         (74, "Daniel Romero Quezada", "OL"),
         (76, "Andrik Sánchez Benítez", "OL"),
         (77, "Luis Enrique Fernández Vera", "OL"),
-        (80, "Alan Andrés Mariano Malagón", "PB"),
+        (80, "Alan Andrés Mariano Malagón", "DB"),
         (81, "César Adonai Román Castrejón", "WR"),
         (82, "Jonathan Michel Reyes Pérez", "WR"),
         (83, "Ángel Santiago Reyes Pérez", "WR"),
@@ -106,15 +106,14 @@ if 'df' not in st.session_state:
 
     n_jugadores = len(roster_data)
     
-    # Asignar unidades automáticamente según la posición
     unidades = []
     for _, _, pos in roster_data:
         if pos in ["QB", "RB", "WR", "OL"]:
             unidades.append("Ofensiva")
-        elif pos in ["DL", "LB", "DB", "CB"]:
-            unidades.append("Defensiva")
-        else:
+        elif pos == "K":
             unidades.append("Equipos Especiales")
+        else:
+            unidades.append("Defensiva")
 
     datos_iniciales = {
         'Jersey': [item[0] for item in roster_data],
@@ -172,7 +171,7 @@ if 'active_jugador_nombre' not in st.session_state:
 if 'active_pos' not in st.session_state:
     st.session_state.active_pos = None
 
-# Pestañas principales actualizadas con Evaluación Psicológica independiente
+# Pestañas principales
 tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
     "📊 Análisis Individual", 
     "⚙️ Base de Datos", 
@@ -236,12 +235,12 @@ with tab4:
     else:
         col_ex1, col_ex2 = st.columns(2)
         with col_ex1:
-            jersey_exprs = st.number_input("Número de Jersey", min_value=0, max_value=99, value=3, key="num_jersey_exprs")
+            jersey_exprs = st.number_input("Número de Jersey", min_value=0, max_value=99, value=87, key="num_jersey_exprs")
         with col_ex2:
-            pos_exprs = st.selectbox("Posición", ["QB", "RB", "WR", "OL", "DL", "LB", "DB", "CB", "K", "P"], key="pos_exprs_box")
+            pos_exprs = st.selectbox("Posición", ["QB", "RB", "WR", "OL", "DL", "LB", "DB", "CB", "K"], key="pos_exprs_box")
             
         if st.button("Confirmar y Cargar por Jersey"):
-            unidad_asignada = "Ofensiva" if pos_exprs in ["QB", "RB", "WR", "OL"] else ("Defensiva" if pos_exprs in ["DL", "LB", "DB", "CB"] else "Equipos Especiales")
+            unidad_asignada = "Ofensiva" if pos_exprs in ["QB", "RB", "WR", "OL"] else ("Equipos Especiales" if pos_exprs == "K" else "Defensiva")
             match_jersey = st.session_state.df[st.session_state.df['Jersey'] == int(jersey_exprs)]
             
             if not match_jersey.empty:
@@ -322,7 +321,7 @@ with tab4:
                     st.session_state.df.at[idx_live, 'Intercepciones_Partidos'] += 1
                     st.success("Intercepción registrada.")
 
-        elif pos_live in ['K', 'P', 'PB']:
+        elif pos_live == 'K':
             col_k1, col_k2 = st.columns(2)
             with col_k1:
                 if st.button("Gol de Campo (3 pts)"):
@@ -405,7 +404,7 @@ with tab2:
         "Estatus Médico", 
         "Unidad Ofensiva", 
         "Unidad Defensiva", 
-        "Equipos Especiales"
+        "Equipos Especiales (Solo K)"
     ])
 
     with sub_psi:
@@ -442,8 +441,8 @@ with tab2:
             st.success("Estadísticas defensivas actualizadas.")
 
     with sub_st:
-        st.subheader("Edición Directa: Equipos Especiales")
-        df_st = st.session_state.df[st.session_state.df['Unidad'] == 'Equipos Especiales'].copy()
+        st.subheader("Edición Directa: Equipos Especiales (Solo K)")
+        df_st = st.session_state.df[st.session_state.df['Posición'] == 'K'].copy()
         cols_st_view = [
             'Jersey', 'Jugador', 'Posición', 'Partidos_Convocados',
             'Goles_Campo_Partidos', 'Puntos_Extra_Partidos'
@@ -451,7 +450,7 @@ with tab2:
         df_st_edited = st.data_editor(df_st[cols_st_view], use_container_width=True, hide_index=True, key="edit_st_direct")
         if not df_st_edited.equals(df_st[cols_st_view]):
             st.session_state.df.update(df_st_edited)
-            st.success("Estadísticas de equipos especiales actualizadas.")
+            st.success("Estadísticas de pateo actualizadas.")
 
 # --- PESTAÑA 6: CALENDARIO ---
 with tab6:
@@ -512,15 +511,15 @@ with tab3:
         if not box_def_edit.equals(box_defense):
             st.success("Box score defensivo actualizado.")
 
-    st.markdown("### KICKING & SPECIAL TEAMS")
-    df_st = df_global[df_global['Unidad'] == 'Equipos Especiales'].copy()
+    st.markdown("### KICKING & SPECIAL TEAMS (SOLO K)")
+    df_st = df_global[df_global['Posición'] == 'K'].copy()
     if not df_st.empty:
         box_st = df_st[['Jersey', 'Jugador', 'Posición', 'Goles_Campo_Partidos', 'Puntos_Extra_Partidos']].rename(columns={
             'Jersey': 'NO.', 'Jugador': 'JUGADOR', 'Posición': 'POS', 'Goles_Campo_Partidos': 'GOLES DE CAMPO (FG)', 'Puntos_Extra_Partidos': 'PUNTOS EXTRA (PAT)'
         })
         box_st_edit = st.data_editor(box_st, use_container_width=True, hide_index=True, key="box_st_edit")
         if not box_st_edit.equals(box_st):
-            st.success("Box score de equipos especiales actualizado.")
+            st.success("Box score de pateo actualizado.")
 
 # --- PESTAÑA 1: ANÁLISIS INDIVIDUAL COMPLETO ---
 with tab1:
@@ -622,7 +621,7 @@ with tab1:
                     with col2: st.metric("AVG Tackleadas / Partido", f"{tackleadas_ppg:.1f}")
                     with col3: st.metric("Total Intercepciones", int(stats_jugador['Intercepciones_Partidos']))
                 
-                elif pos in ['K', 'P', 'PB']:
+                elif pos == 'K':
                     goles_campo = stats_jugador['Goles_Campo_Partidos']
                     puntos_extra = stats_jugador['Puntos_Extra_Partidos']
                     puntos_totales = (goles_campo * 3) + puntos_extra
