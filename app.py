@@ -183,7 +183,7 @@ tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
     "📅 Calendario"
 ])
 
-# --- PESTAÑA 4: REGISTRO DE DATOS EN VIVO (PARTIDOS O ENTRENAMIENTOS CON TÉCNICA) ---
+# --- PESTAÑA 4: REGISTRO DE DATOS EN VIVO ---
 with tab4:
     st.header("Registro de Datos y Mesa Táctil en Vivo")
     st.write("Elige el modo de operación para registrar estadísticas de partido o métricas técnicas y físicas en entrenamientos.")
@@ -382,17 +382,17 @@ with tab4:
                 st.markdown("---")
                 st.markdown("##### 🏈 Rendimiento Técnico en Práctica")
                 
-                n_yds_ent, n_p_int_ent, n_p_comp_ent = 0, 0, 0
+                n_yds_ent, n_p_int_ent, n_p_comp_ent = 0.0, 0, 0
                 n_pancakes_ent, n_sacks_perm_ent = 0, 0
                 n_tack_ent, n_int_ent, n_sacks_def_ent = 0, 0, 0.0
 
                 if pos_ent == 'QB':
-                    n_yds_ent = st.number_input("Yardas Lanzadas / Acarreo en Práctica", min_value=-10, value=0)
+                    n_yds_ent = st.number_input("Yardas Lanzadas / Acarreo en Práctica", min_value=-10.0, value=0.0)
                     col_ep1, col_ep2 = st.columns(2)
                     with col_ep1: n_p_comp_ent = st.number_input("Pases Completados en Práctica", min_value=0, value=0)
                     with col_ep2: n_p_int_ent = st.number_input("Pases Intentados en Práctica", min_value=0, value=0)
                 elif pos_ent in ['WR', 'RB']:
-                    n_yds_ent = st.number_input("Yardas Ganadas en Práctica", min_value=-5, value=0)
+                    n_yds_ent = st.number_input("Yardas Ganadas en Práctica", min_value=-5.0, value=0.0)
                 elif pos_ent == 'OL':
                     n_pancakes_ent = st.number_input("Bloqueos de Dominio (Pancakes) en Práctica", min_value=0, value=0)
                     n_sacks_perm_ent = st.number_input("Sacks Permitidos en Práctica", min_value=0, value=0)
@@ -624,7 +624,7 @@ with tab3:
         if not box_st_edit.equals(box_st):
             st.success("Box score de pateo actualizado.")
 
-# --- PESTAÑA 1: ANÁLISIS INDIVIDUAL COMPLETO ---
+# --- PESTAÑA 1: ANÁLISIS INDIVIDUAL COMPLETO CON PORCENTAJES COMPARATIVOS ---
 with tab1:
     df = st.session_state.df.copy()
     df['PJ_Calc'] = df['Partidos_Convocados'].replace(0, 1)
@@ -682,48 +682,70 @@ with tab1:
                 with col_p2:
                     st.markdown(f"Convocatoria en Partidos: `{pct_partidos:.1f}%` ({partidos_jugados}/{partidos_tot})")
 
-                st.subheader("Métricas de Rendimiento (Partidos & Entrenamientos)")
+                st.subheader("📈 Métricas y Comparativa (Partidos vs. Entrenamientos)")
                 col1, col2, col3 = st.columns(3)
                 
                 pj = stats_jugador['PJ_Calc']
                 pe = stats_jugador['PE_Calc']
 
                 if pos == 'QB':
-                    intentos_tot = stats_jugador['Pases_Intentados_Partidos']
-                    completados_tot = stats_jugador['Pases_Completados_Partidos']
-                    pct_comp = (completados_tot / intentos_tot * 100) if intentos_tot > 0 else 0.0
+                    # Partidos
+                    intentos_partido = stats_jugador['Pases_Intentados_Partidos']
+                    completados_partido = stats_jugador['Pases_Completados_Partidos']
+                    pct_comp_partido = (completados_partido / intentos_partido * 100) if intentos_partido > 0 else 0.0
                     yardas_ppg = stats_jugador['Yardas_Producidas_Partidos'] / pj
-                    yardas_ent = stats_jugador['Yardas_Producidas_Entrenos']
+                    
+                    # Entrenamientos
+                    intentos_entreno = stats_jugador['Pases_Intentados_Entrenos']
+                    completados_entreno = stats_jugador['Pases_Completados_Entrenos']
+                    pct_comp_entreno = (completados_entreno / intentos_entreno * 100) if intentos_entreno > 0 else 0.0
+                    
                     with col1: st.metric("PPG (Yardas / Partido)", f"{yardas_ppg:.1f} yds")
-                    with col2: st.metric("AVG Pases (Comp / Int)", f"{pct_comp:.1f}%", f"{completados_tot}/{intentos_tot}")
-                    with col3: st.metric("Yardas en Entrenos", int(yardas_ent))
+                    with col2: st.metric("Efectividad Pases (Partidos)", f"{pct_comp_partido:.1f}%", f"{completados_partido}/{intentos_partido}")
+                    with col3: st.metric("Efectividad Pases (Prácticas)", f"{pct_comp_entreno:.1f}%", f"{completados_entreno}/{intentos_entreno}")
+
                 elif pos in ['WR', 'RB']:
                     yardas_ppg = stats_jugador['Yardas_Producidas_Partidos'] / pj
-                    yardas_ent = stats_jugador['Yardas_Producidas_Entrenos']
+                    yardas_entreno = stats_jugador['Yardas_Producidas_Entrenos']
+                    total_yardas = stats_jugador['Yardas_Producidas_Partidos'] + yardas_entreno
+                    
+                    pct_partido_yds = (stats_jugador['Yardas_Producidas_Partidos'] / total_yardas * 100) if total_yardas > 0 else 0.0
+                    pct_entreno_yds = (yardas_entreno / total_yardas * 100) if total_yardas > 0 else 0.0
+
                     with col1: st.metric("PPG (Yardas / Partido)", f"{yardas_ppg:.1f} yds")
-                    with col2: st.metric("Yardas Acumuladas Prácticas", int(yardas_ent))
-                    with col3: st.metric("Total Yardas Globales", int(stats_jugador['Yardas_Producidas_Partidos'] + yardas_ent))
+                    with col2: st.metric("Distribución Partidos", f"{pct_partido_yds:.1f}%", f"{int(stats_jugador['Yardas_Producidas_Partidos'])} yds")
+                    with col3: st.metric("Distribución Prácticas", f"{pct_entreno_yds:.1f}%", f"{int(yardas_entreno)} yds")
                 
                 elif pos == 'OL':
                     pancakes_ppg = stats_jugador['Bloqueos_Dominio_Partidos'] / pj
-                    pancakes_ent = stats_jugador['Bloqueos_Dominio_Entrenos']
+                    pancakes_entreno = stats_jugador['Bloqueos_Dominio_Entrenos']
+                    total_pancakes = stats_jugador['Bloqueos_Dominio_Partidos'] + pancakes_entreno
+
+                    pct_p_partido = (stats_jugador['Bloqueos_Dominio_Partidos'] / total_pancakes * 100) if total_pancakes > 0 else 0.0
+                    pct_p_entreno = (pancakes_entreno / total_pancakes * 100) if total_pancakes > 0 else 0.0
+
                     with col1: st.metric("PPG (Pancakes / Partido)", f"{pancakes_ppg:.1f}")
-                    with col2: st.metric("Pancakes en Prácticas", int(pancakes_ent))
-                    with col3: st.metric("Sacks Permitidos (Total)", int(stats_jugador['Capturas_Permitidas_Partidos'] + stats_jugador['Capturas_Permitidas_Entrenos']))
+                    with col2: st.metric("Pancakes Partidos (%)", f"{pct_p_partido:.1f}%", f"{int(stats_jugador['Bloqueos_Dominio_Partidos'])}")
+                    with col3: st.metric("Pancakes Prácticas (%)", f"{pct_p_entreno:.1f}%", f"{int(pancakes_entreno)}")
                 
                 elif pos in ['DL', 'LB']:
                     tackleadas_ppg = stats_jugador['Tackleadas_Efectivas_Partidos'] / pj
-                    tackleadas_ent = stats_jugador['Tackleadas_Efectivas_Entrenos']
+                    tackleadas_entreno = stats_jugador['Tackleadas_Efectivas_Entrenos']
+                    total_tackles = stats_jugador['Tackleadas_Efectivas_Partidos'] + tackleadas_entreno
+
+                    pct_t_partido = (stats_jugador['Tackleadas_Efectivas_Partidos'] / total_tackles * 100) if total_tackles > 0 else 0.0
+                    pct_t_entreno = (tackleadas_entreno / total_tackles * 100) if total_tackles > 0 else 0.0
+
                     with col1: st.metric("PPG (Tackleadas / Partido)", f"{tackleadas_ppg:.1f}")
-                    with col2: st.metric("Tackleadas en Prácticas", int(tackleadas_ent))
-                    with col3: st.metric("Total Sacks Defensivos", float(stats_jugador['Capturas_QB_Sacks_Partidos'] + stats_jugador['Capturas_QB_Sacks_Entrenos']))
+                    with col2: st.metric("Tackleadas Partidos (%)", f"{pct_t_partido:.1f}%", f"{int(stats_jugador['Tackleadas_Efectivas_Partidos'])}")
+                    with col3: st.metric("Tackleadas Prácticas (%)", f"{pct_t_entreno:.1f}%", f"{int(tackleadas_entreno)}")
                 
                 elif pos in ['DB', 'CB']:
                     intercepciones_ppg = stats_jugador['Intercepciones_Partidos'] / pj
-                    tackleadas_ppg = stats_jugador['Tackleadas_Efectivas_Partidos'] / pj
+                    ints_entreno = stats_jugador['Intercepciones_Entrenos']
                     with col1: st.metric("PPG (Intercepciones / P.)", f"{intercepciones_ppg:.2f}")
-                    with col2: st.metric("AVG Tackleadas / Partido", f"{tackleadas_ppg:.1f}")
-                    with col3: st.metric("Total Intercepciones", int(stats_jugador['Intercepciones_Partidos'] + stats_jugador['Intercepciones_Entrenos']))
+                    with col2: st.metric("INTs en Partidos", int(stats_jugador['Intercepciones_Partidos']))
+                    with col3: st.metric("INTs en Prácticas", int(ints_entreno))
                 
                 elif pos == 'K':
                     goles_campo = stats_jugador['Goles_Campo_Partidos']
