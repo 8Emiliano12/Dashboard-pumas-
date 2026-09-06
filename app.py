@@ -441,7 +441,7 @@ with tab2:
             st.success("Estadísticas defensivas actualizadas.")
 
     with sub_st:
-        st.subheader("Edición Directa: Equipos Especiales (Solo K)")
+        st.subheader("Edición Directa: Equipos Especiales")
         df_st = st.session_state.df[st.session_state.df['Posición'] == 'K'].copy()
         cols_st_view = [
             'Jersey', 'Jugador', 'Posición', 'Partidos_Convocados',
