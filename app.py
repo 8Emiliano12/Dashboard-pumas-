@@ -420,7 +420,7 @@ with tab4:
                 dolor_ent_val = st.slider("Dolor Muscular / Molestias (1-10)", 1, 10, int(st.session_state.df.at[idx_ent, 'Dolor_Muscular']))
                 recup_ent_val = st.slider("Nivel de Recuperación / Frescura (1-10)", 1, 10, int(st.session_state.df.at[idx_ent, 'Recuperacion_Entreno']))
                 
-                asist_ent_val = st.selectbox("Asistencia a la Sesión", ["Asistió", "No Asistió"])
+                asist_ent_val = st.selectbox("Asistencia al Entrenamiento", ["Asistió", "No Asistió"])
                 estatus_med_val = st.selectbox("Estatus Médico", ["Activo", "Precaución Médica", "Lesionado / Inactivo"])
 
                 st.markdown("---")
@@ -638,52 +638,91 @@ with tab6:
 # --- PESTAÑA 3: BOX SCORE OFICIAL ---
 with tab3:
     st.header("Box Score Oficial y Estadísticas por Categoría")
-    st.write("Puedes modificar cualquier número o nombre directamente sobre las tablas del Box Score.")
+    st.write("Consulta y edita los acumulados oficiales tanto de Partidos Oficiales como de Entrenamientos Semanales.")
     
     df_global = st.session_state.df.copy()
     
-    st.markdown("### OFENSIVA: PASSING, RUSHING, FUMBLES & DROPS (QB, RB, WR)")
-    df_of = df_global[df_global['Unidad'] == 'Ofensiva'].copy()
-    if not df_of.empty:
-        df_of['Pases_C_ATT'] = df_of['Pases_Completados_Partidos'].astype(str) + "-" + df_of['Pases_Intentados_Partidos'].astype(str)
-        box_passing = df_of[['Jersey', 'Jugador', 'Posición', 'Pases_C_ATT', 'Yardas_Pase_Partidos', 'Yardas_Acarreo_Partidos', 'Fumbles_Partidos', 'Drops_Partidos']].rename(columns={
-            'Jersey': 'NO.', 'Jugador': 'JUGADOR', 'Posición': 'POS', 'Pases_C_ATT': 'CP-ATT', 
-            'Yardas_Pase_Partidos': 'PASS YDS', 'Yardas_Acarreo_Partidos': 'RUSH YDS', 'Fumbles_Partidos': 'FUMBLES', 'Drops_Partidos': 'DROPS'
-        })
-        box_passing_edit = st.data_editor(box_passing, use_container_width=True, hide_index=True, key="box_pass_edit")
-        if not box_passing_edit.equals(box_passing):
-            st.success("Box score de ofensiva actualizado.")
+    # Selector de visualización en Box Score
+    tipo_box_view = st.radio("Selecciona el Bloque de Box Score:", ["🏟️ Partidos Oficiales", "🏋️ Entrenamientos Semanales"], horizontal=True, key="tipo_box_view_radio")
+    st.divider()
 
-    st.markdown("### BLOQUEOS Y PROTECCIÓN (OFFENSIVE LINE - OL)")
-    df_ol = df_global[df_global['Posición'] == 'OL'].copy()
-    if not df_ol.empty:
-        box_blocking = df_ol[['Jersey', 'Jugador', 'Posición', 'Bloqueos_Dominio_Partidos', 'Capturas_Permitidas_Partidos']].rename(columns={
-            'Jersey': 'NO.', 'Jugador': 'JUGADOR', 'Posición': 'POS', 'Bloqueos_Dominio_Partidos': 'BLOQUEOS DOMINIO (PANCAKES)', 'Capturas_Permitidas_Partidos': 'SACKS PERMITIDOS'
-        })
-        box_blocking_edit = st.data_editor(box_blocking, use_container_width=True, hide_index=True, key="box_block_edit")
-        if not box_blocking_edit.equals(box_blocking):
-            st.success("Box score de línea ofensiva actualizado.")
+    if tipo_box_view == "🏟️ Partidos Oficiales":
+        st.subheader("🏟️ PARTIDOS: OFENSIVA (Passing, Rushing, Fumbles & Drops)")
+        df_of = df_global[df_global['Unidad'] == 'Ofensiva'].copy()
+        if not df_of.empty:
+            df_of['Pases_C_ATT'] = df_of['Pases_Completados_Partidos'].astype(str) + "-" + df_of['Pases_Intentados_Partidos'].astype(str)
+            box_passing = df_of[['Jersey', 'Jugador', 'Posición', 'Pases_C_ATT', 'Yardas_Pase_Partidos', 'Yardas_Acarreo_Partidos', 'Fumbles_Partidos', 'Drops_Partidos']].rename(columns={
+                'Jersey': 'NO.', 'Jugador': 'JUGADOR', 'Posición': 'POS', 'Pases_C_ATT': 'CP-ATT', 
+                'Yardas_Pase_Partidos': 'PASS YDS', 'Yardas_Acarreo_Partidos': 'RUSH YDS', 'Fumbles_Partidos': 'FUMBLES', 'Drops_Partidos': 'DROPS'
+            })
+            box_passing_edit = st.data_editor(box_passing, use_container_width=True, hide_index=True, key="box_pass_edit")
+            if not box_passing_edit.equals(box_passing):
+                st.success("Box score de ofensiva (partidos) actualizado.")
 
-    st.markdown("### DEFENSE (FRONT 7 & SECUNDARIA)")
-    df_def = df_global[df_global['Unidad'] == 'Defensiva'].copy()
-    if not df_def.empty:
-        box_defense = df_def[['Jersey', 'Jugador', 'Posición', 'Tackleadas_Efectivas_Partidos', 'Capturas_QB_Sacks_Partidos', 'Intercepciones_Partidos', 'Pases_Desviados_Partidos']].rename(columns={
-            'Jersey': 'NO.', 'Jugador': 'JUGADOR', 'Posición': 'POS', 'Tackleadas_Efectivas_Partidos': 'TACKLES', 
-            'Capturas_QB_Sacks_Partidos': 'SACKS', 'Intercepciones_Partidos': 'INT', 'Pases_Desviados_Partidos': 'PBU (DEFLECTED)'
-        })
-        box_def_edit = st.data_editor(box_defense, use_container_width=True, hide_index=True, key="box_def_edit")
-        if not box_def_edit.equals(box_def_edit):
-            st.success("Box score defensivo actualizado.")
+        st.subheader("🏟️ PARTIDOS: BLOQUEOS Y PROTECCIÓN (OL)")
+        df_ol = df_global[df_global['Posición'] == 'OL'].copy()
+        if not df_ol.empty:
+            box_blocking = df_ol[['Jersey', 'Jugador', 'Posición', 'Bloqueos_Dominio_Partidos', 'Capturas_Permitidas_Partidos']].rename(columns={
+                'Jersey': 'NO.', 'Jugador': 'JUGADOR', 'Posición': 'POS', 'Bloqueos_Dominio_Partidos': 'PANCAKES', 'Capturas_Permitidas_Partidos': 'SACKS PERMITIDOS'
+            })
+            box_blocking_edit = st.data_editor(box_blocking, use_container_width=True, hide_index=True, key="box_block_edit")
+            if not box_blocking_edit.equals(box_blocking):
+                st.success("Box score de línea ofensiva (partidos) actualizado.")
 
-    st.markdown("### KICKING & SPECIAL TEAMS")
-    df_st = df_global[df_global['Posición'] == 'K'].copy()
-    if not df_st.empty:
-        box_st = df_st[['Jersey', 'Jugador', 'Posición', 'Goles_Campo_Partidos', 'Puntos_Extra_Partidos']].rename(columns={
-            'Jersey': 'NO.', 'Jugador': 'JUGADOR', 'Posición': 'POS', 'Goles_Campo_Partidos': 'GOLES DE CAMPO (FG)', 'Puntos_Extra_Partidos': 'PUNTOS EXTRA (PAT)'
-        })
-        box_st_edit = st.data_editor(box_st, use_container_width=True, hide_index=True, key="box_st_edit")
-        if not box_st_edit.equals(box_st):
-            st.success("Box score de pateo actualizado.")
+        st.subheader("🏟️ PARTIDOS: DEFENSE (Front 7 & Secundaria)")
+        df_def = df_global[df_global['Unidad'] == 'Defensiva'].copy()
+        if not df_def.empty:
+            box_defense = df_def[['Jersey', 'Jugador', 'Posición', 'Tackleadas_Efectivas_Partidos', 'Capturas_QB_Sacks_Partidos', 'Intercepciones_Partidos', 'Pases_Desviados_Partidos']].rename(columns={
+                'Jersey': 'NO.', 'Jugador': 'JUGADOR', 'Posición': 'POS', 'Tackleadas_Efectivas_Partidos': 'TACKLES', 
+                'Capturas_QB_Sacks_Partidos': 'SACKS', 'Intercepciones_Partidos': 'INT', 'Pases_Desviados_Partidos': 'PBU'
+            })
+            box_def_edit = st.data_editor(box_defense, use_container_width=True, hide_index=True, key="box_def_edit")
+            if not box_def_edit.equals(box_def_edit):
+                st.success("Box score defensivo (partidos) actualizado.")
+
+        st.subheader("🏟️ PARTIDOS: KICKING & SPECIAL TEAMS")
+        df_st = df_global[df_global['Posición'] == 'K'].copy()
+        if not df_st.empty:
+            box_st = df_st[['Jersey', 'Jugador', 'Posición', 'Goles_Campo_Partidos', 'Puntos_Extra_Partidos']].rename(columns={
+                'Jersey': 'NO.', 'Jugador': 'JUGADOR', 'Posición': 'POS', 'Goles_Campo_Partidos': 'FG (Goles de Campo)', 'Puntos_Extra_Partidos': 'PAT (Puntos Extra)'
+            })
+            box_st_edit = st.data_editor(box_st, use_container_width=True, hide_index=True, key="box_st_edit")
+            if not box_st_edit.equals(box_st):
+                st.success("Box score de pateo (partidos) actualizado.")
+
+    else:
+        st.subheader("🏋️ ENTRENAMIENTOS: OFENSIVA (Passing, Rushing, Fumbles & Drops)")
+        df_of_e = df_global[df_global['Unidad'] == 'Ofensiva'].copy()
+        if not df_of_e.empty:
+            df_of_e['Pases_C_ATT_Ent'] = df_of_e['Pases_Completados_Entrenos'].astype(str) + "-" + df_of_e['Pases_Intentados_Entrenos'].astype(str)
+            box_passing_ent = df_of_e[['Jersey', 'Jugador', 'Posición', 'Pases_C_ATT_Ent', 'Yardas_Pase_Entrenos', 'Yardas_Acarreo_Entrenos', 'Fumbles_Entrenos', 'Drops_Entrenos']].rename(columns={
+                'Jersey': 'NO.', 'Jugador': 'JUGADOR', 'Posición': 'POS', 'Pases_C_ATT_Ent': 'CP-ATT (Práctica)', 
+                'Yardas_Pase_Entrenos': 'PASS YDS (Práctica)', 'Yardas_Acarreo_Entrenos': 'RUSH YDS (Práctica)', 'Fumbles_Entrenos': 'FUMBLES (Práctica)', 'Drops_Entrenos': 'DROPS (Práctica)'
+            })
+            box_pass_ent_edit = st.data_editor(box_passing_ent, use_container_width=True, hide_index=True, key="box_pass_ent_edit")
+            if not box_pass_ent_edit.equals(box_passing_ent):
+                st.success("Box score de ofensiva (entrenamientos) actualizado.")
+
+        st.subheader("🏋️ ENTRENAMIENTOS: BLOQUEOS Y PROTECCIÓN (OL)")
+        df_ol_e = df_global[df_global['Posición'] == 'OL'].copy()
+        if not df_ol_e.empty:
+            box_blocking_ent = df_ol_e[['Jersey', 'Jugador', 'Posición', 'Bloqueos_Dominio_Entrenos', 'Capturas_Permitidas_Entrenos']].rename(columns={
+                'Jersey': 'NO.', 'Jugador': 'JUGADOR', 'Posición': 'POS', 'Bloqueos_Dominio_Entrenos': 'PANCAKES (Práctica)', 'Capturas_Permitidas_Entrenos': 'SACKS PERMITIDOS (Práctica)'
+            })
+            box_block_ent_edit = st.data_editor(box_blocking_ent, use_container_width=True, hide_index=True, key="box_block_ent_edit")
+            if not box_block_ent_edit.equals(box_blocking_ent):
+                st.success("Box score de línea ofensiva (entrenamientos) actualizado.")
+
+        st.subheader("🏋️ ENTRENAMIENTOS: DEFENSE (Front 7 & Secundaria)")
+        df_def_e = df_global[df_global['Unidad'] == 'Defensiva'].copy()
+        if not df_def_e.empty:
+            box_defense_ent = df_def_e[['Jersey', 'Jugador', 'Posición', 'Tackleadas_Efectivas_Entrenos', 'Capturas_QB_Sacks_Entrenos', 'Intercepciones_Entrenos', 'Pases_Desviados_Entrenos']].rename(columns={
+                'Jersey': 'NO.', 'Jugador': 'JUGADOR', 'Posición': 'POS', 'Tackleadas_Efectivas_Entrenos': 'TACKLES (Práctica)', 
+                'Capturas_QB_Sacks_Entrenos': 'SACKS (Práctica)', 'Intercepciones_Entrenos': 'INT (Práctica)', 'Pases_Desviados_Entrenos': 'PBU (Práctica)'
+            })
+            box_def_ent_edit = st.data_editor(box_defense_ent, use_container_width=True, hide_index=True, key="box_def_ent_edit")
+            if not box_def_ent_edit.equals(box_defense_ent):
+                st.success("Box score defensivo (entrenamientos) actualizado.")
 
 # --- PESTAÑA 1: ANÁLISIS INDIVIDUAL COMPLETO ---
 with tab1:
@@ -810,7 +849,6 @@ with tab1:
 
                 st.divider()
 
-                # --- NUEVO APARTADO: TABLAS Y GRÁFICAS COMPARATIVAS (PARTIDOS VS ENTRENAMIENTOS) ---
                 st.subheader("📊 Historial Comparativo: Partidos vs. Entrenamientos")
                 
                 tab_ind_partido, tab_ind_entreno = st.tabs(["🏟️ Datos y Gráficas de Partidos", "🏋️ Datos y Gráficas de Entrenamientos"])
@@ -881,4 +919,3 @@ with tab1:
                     st.metric("Ansiedad / Activación", f"{stats_jugador['Ansiedad_Competitiva']}/10")
                     st.metric("Confianza Táctica", f"{stats_jugador['Confianza_Tactica']}/10")
                     st.metric("Sueño Noche Previa", f"{stats_jugador['Sueno_Prepartido']} hrs")
-
