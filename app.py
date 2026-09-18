@@ -333,9 +333,9 @@ with tab4:
             elif pos_live == 'OL':
                 col_ol1, col_ol2 = st.columns(2)
                 with col_ol1:
-                    if st.button("Bloqueo de Dominio (Pancake)"):
+                    if st.button("Bloqueo Efectivo"):
                         st.session_state.df.at[idx_live, 'Bloqueos_Dominio_Partidos'] += 1
-                        st.success("Pancake registrado.")
+                        st.success("Bloqueo registrado.")
                 with col_ol2:
                     if st.button("Sack Permitido"):
                         st.session_state.df.at[idx_live, 'Capturas_Permitidas_Partidos'] += 1
@@ -443,7 +443,7 @@ with tab4:
                     n_ypase_ent = st.number_input("Yardas de Recepción en Práctica", min_value=-5.0, value=0.0)
                     n_drops_ent = st.number_input("Drops en Práctica", min_value=0, value=0)
                 elif pos_ent == 'OL':
-                    n_pancakes_ent = st.number_input("Bloqueos de Dominio (Pancakes) en Práctica", min_value=0, value=0)
+                    n_pancakes_ent = st.number_input("Bloqueos en Práctica", min_value=0, value=0)
                     n_sacks_perm_ent = st.number_input("Sacks Permitidos en Práctica", min_value=0, value=0)
                 elif pos_ent in ['DL', 'LB']:
                     n_tack_ent = st.number_input("Tackleadas Efectivas en Práctica", min_value=0, value=0)
@@ -642,7 +642,6 @@ with tab3:
     
     df_global = st.session_state.df.copy()
     
-    # Selector de visualización en Box Score
     tipo_box_view = st.radio("Selecciona el Bloque de Box Score:", ["🏟️ Partidos Oficiales", "🏋️ Entrenamientos Semanales"], horizontal=True, key="tipo_box_view_radio")
     st.divider()
 
@@ -663,7 +662,7 @@ with tab3:
         df_ol = df_global[df_global['Posición'] == 'OL'].copy()
         if not df_ol.empty:
             box_blocking = df_ol[['Jersey', 'Jugador', 'Posición', 'Bloqueos_Dominio_Partidos', 'Capturas_Permitidas_Partidos']].rename(columns={
-                'Jersey': 'NO.', 'Jugador': 'JUGADOR', 'Posición': 'POS', 'Bloqueos_Dominio_Partidos': 'PANCAKES', 'Capturas_Permitidas_Partidos': 'SACKS PERMITIDOS'
+                'Jersey': 'NO.', 'Jugador': 'JUGADOR', 'Posición': 'POS', 'Bloqueos_Dominio_Partidos': 'BLOQUEOS', 'Capturas_Permitidas_Partidos': 'SACKS PERMITIDOS'
             })
             box_blocking_edit = st.data_editor(box_blocking, use_container_width=True, hide_index=True, key="box_block_edit")
             if not box_blocking_edit.equals(box_blocking):
@@ -707,7 +706,7 @@ with tab3:
         df_ol_e = df_global[df_global['Posición'] == 'OL'].copy()
         if not df_ol_e.empty:
             box_blocking_ent = df_ol_e[['Jersey', 'Jugador', 'Posición', 'Bloqueos_Dominio_Entrenos', 'Capturas_Permitidas_Entrenos']].rename(columns={
-                'Jersey': 'NO.', 'Jugador': 'JUGADOR', 'Posición': 'POS', 'Bloqueos_Dominio_Entrenos': 'PANCAKES (Práctica)', 'Capturas_Permitidas_Entrenos': 'SACKS PERMITIDOS (Práctica)'
+                'Jersey': 'NO.', 'Jugador': 'JUGADOR', 'Posición': 'POS', 'Bloqueos_Dominio_Entrenos': 'BLOQUEOS (Práctica)', 'Capturas_Permitidas_Entrenos': 'SACKS PERMITIDOS (Práctica)'
             })
             box_block_ent_edit = st.data_editor(box_blocking_ent, use_container_width=True, hide_index=True, key="box_block_ent_edit")
             if not box_block_ent_edit.equals(box_blocking_ent):
@@ -815,11 +814,11 @@ with tab1:
                     with col3: st.metric("Total Receiving Yards", int(stats_jugador['Yardas_Pase_Partidos'] + stats_jugador['Yardas_Pase_Entrenos']))
                 
                 elif pos == 'OL':
-                    pancakes_ppg = stats_jugador['Bloqueos_Dominio_Partidos'] / pj
-                    pancakes_ent = stats_jugador['Bloqueos_Dominio_Entrenos']
-                    total_pancakes = stats_jugador['Bloqueos_Dominio_Partidos'] + pancakes_ent
-                    with col1: st.metric("PPG (Pancakes / Partido)", f"{pancakes_ppg:.1f}")
-                    with col2: st.metric("Pancakes Prácticas", int(pancakes_ent))
+                    bloqueos_ppg = stats_jugador['Bloqueos_Dominio_Partidos'] / pj
+                    bloqueos_ent = stats_jugador['Bloqueos_Dominio_Entrenos']
+                    total_bloqueos = stats_jugador['Bloqueos_Dominio_Partidos'] + bloqueos_ent
+                    with col1: st.metric("PPG (Bloqueos / Partido)", f"{bloqueos_ppg:.1f}")
+                    with col2: st.metric("Bloqueos Prácticas", int(bloqueos_ent))
                     with col3: st.metric("Sacks Permitidos (Total)", int(stats_jugador['Capturas_Permitidas_Partidos'] + stats_jugador['Capturas_Permitidas_Entrenos']))
                 
                 elif pos in ['DL', 'LB']:
@@ -856,7 +855,7 @@ with tab1:
                 with tab_ind_partido:
                     st.markdown("##### Resumen Estadístico en Partidos Oficiales")
                     df_resumen_partido = pd.DataFrame({
-                        'Métrica': ['Convocatorias', 'Yardas Pase / Rec', 'Yardas Rushing', 'Pases Intentados', 'Pases Completados', 'Pancakes / Bloqueos', 'Sacks Permitidos', 'Tackleadas', 'Sacks Defensivos', 'Intercepciones / PBU', 'Fumbles', 'Drops'],
+                        'Métrica': ['Convocatorias', 'Yardas Pase / Rec', 'Yardas Rushing', 'Pases Intentados', 'Pases Completados', 'Bloqueos', 'Sacks Permitidos', 'Tackleadas', 'Sacks Defensivos', 'Intercepciones / PBU', 'Fumbles', 'Drops'],
                         'Valor Registrado': [
                             int(stats_jugador['Partidos_Convocados']),
                             float(stats_jugador['Yardas_Pase_Partidos']),
@@ -881,7 +880,7 @@ with tab1:
                 with tab_ind_entreno:
                     st.markdown("##### Resumen Estadístico en Entrenamientos Semanales")
                     df_resumen_entreno = pd.DataFrame({
-                        'Métrica': ['Sesiones Asistidas', 'Yardas Pase / Rec (Práctica)', 'Yardas Rushing (Práctica)', 'Pases Intentados (Práctica)', 'Pases Completados (Práctica)', 'Bloqueos / Pancakes (Práctica)', 'Sacks Permitidos (Práctica)', 'Tackleadas (Práctica)', 'Sacks Defensivos (Práctica)', 'Intercepciones / PBU (Práctica)', 'Fumbles (Práctica)', 'Drops (Práctica)'],
+                        'Métrica': ['Sesiones Asistidas', 'Yardas Pase / Rec (Práctica)', 'Yardas Rushing (Práctica)', 'Pases Intentados (Práctica)', 'Pases Completados (Práctica)', 'Bloqueos (Práctica)', 'Sacks Permitidos (Práctica)', 'Tackleadas (Práctica)', 'Sacks Defensivos (Práctica)', 'Intercepciones / PBU (Práctica)', 'Fumbles (Práctica)', 'Drops (Práctica)'],
                         'Valor Registrado': [
                             int(stats_jugador['Entrenos_Asistidos']),
                             float(stats_jugador['Yardas_Pase_Entrenos']),
