@@ -31,148 +31,154 @@ if not check_password():
 # ==========================================
 st.title("Panel de Control: Rendimiento y Bienestar - Pumas CU")
 
-# 1. Base de datos con el Roster Completo Precargado
+# Roster Base por si la nube está vacía
+roster_data = [
+    (0, "Jioshi Alexander Morrison González", "DL"),
+    (1, "Raúl Rodrigo Blanco Ruiz", "WR"),
+    (2, "Aarón Soriano Vacaseydel", "DB"),
+    (3, "Leonardo David Garza Peña Villamil", "QB"),
+    (4, "Diego Mercado Sánchez", "LB"),
+    (5, "Julio César Hernández Hernández", "DB"),
+    (6, "Abraham González López", "LB"),
+    (7, "Luis Miguel Bañuelos Medina", "DB"),
+    (8, "Luis Higelin Castañón", "DB"),
+    (9, "Joaquín Aramis Carriles Palma", "DL"),
+    (10, "Emiliano Sánchez Hernández", "QB"),
+    (11, "Raymundo Liceá Solano", "DL"),
+    (12, "Christopher Bryan Cardona Padrón", "WR"),
+    (13, "Javier Santiago Vivas Rodríguez", "WR"),
+    (14, "Luis Mario Medrano Silva", "WR"),
+    (15, "Emiliano Álvarez Reyes", "CB"),
+    (16, "Ian Jeyden Aguilar Rodríguez", "LB"),
+    (17, "Jorge Emilio Corona Sandoval", "QB"),
+    (18, "Jahdiel Alejandro Ponce Hernández", "WR"),
+    (19, "Jirvan Velasco González", "LB"),
+    (21, "Armando Moreno Martínez", "DB"),
+    (22, "Juan Pablo Acosta Gutiérrez", "LB"),
+    (23, "Rodrigo Pérez Rivera", "RB"),
+    (24, "David Ceballos Gutiérrez", "CB"),
+    (25, "Diego Jack Cerda Álvarez", "DB"),
+    (26, "Luis Antonio Schrader Rodríguez", "RB"),
+    (27, "Rodrigo Eugenio Villegas Delgado", "LB"),
+    (28, "Sergio Alejandro Cervantes Franzoni", "LB"),
+    (29, "Santiago Yael Juárez González", "CB"),
+    (30, "Néstor Milan Cabrera Botello", "CB"),
+    (31, "Juan Carlos Arreola Ramírez", "LB"),
+    (32, "Alonso Báez Jimarez", "RB"),
+    (33, "Diego Ángel Bañuelos Medina", "LB"),
+    (34, "Emilio Melo Robles", "RB"),
+    (35, "Hussein Manzur Santillán Ríos", "RB"),
+    (39, "Santiago de Cristo Saldaña Sarabia", "LB"),
+    (40, "Yeshua Ocampo García", "LB"),
+    (42, "Alexis Trejo Caudillo", "LB"),
+    (43, "Erick Yael Rodríguez Pérez", "CB"),
+    (44, "Manlio Fabio Hernández Hernández", "RB"),
+    (51, "Francisco Nogueda Carmona", "OL"),
+    (52, "Diego Eliel Contreras Cervantez", "LB"),
+    (53, "Jesús Hernández Álvarez", "OL"),
+    (54, "Victor Barrientos García", "OL"),
+    (58, "Luis Vadhir Corona Torices", "OL"),
+    (59, "Óscar González Real", "LB"),
+    (68, "Jesús Gael Puente Basañez", "OL"),
+    (70, "Carlos Eduardo Aparicio Gasca", "OL"),
+    (71, "Pedro Brito Almaguer", "OL"),
+    (72, "Jesús Eduardo Trejo López", "OL"),
+    (73, "Jesús Fernando Inzunza López", "OL"),
+    (74, "Daniel Romero Quezada", "OL"),
+    (76, "Andrik Sánchez Benítez", "OL"),
+    (77, "Luis Enrique Fernández Vera", "OL"),
+    (80, "Alan Andrés Mariano Malagón", "DB"),
+    (81, "César Adonai Román Castrejón", "WR"),
+    (82, "Jonathan Michel Reyes Pérez", "WR"),
+    (83, "Ángel Santiago Reyes Pérez", "WR"),
+    (84, "Bruno Said Granados Almeida", "WR"),
+    (87, "Emiliano Zamora Jerónimo", "K"),
+    (88, "Kin Xanhun Villafuerte Rodríguez", "WR"),
+    (89, "Ollin Núñez Solano", "OL"),
+    (90, "Rafael Uriel Saavedra Mendoza", "LB"),
+    (91, "Miguel Martínez Ayala", "DL"),
+    (92, "Sergio Paul Bautista Balderrama", "DL"),
+    (94, "Juan Maximiliano Soriano Silva", "DL"),
+    (95, "Saul Bautista Balderrama", "DL"),
+    (98, "Óscar Alan Miranda Becerril", "WR"),
+    (99, "José Manuel Valdéz Orea", "DL")
+]
+
+n_jugadores = len(roster_data)
+unidades = []
+for _, _, pos in roster_data:
+    if pos in ["QB", "RB", "WR", "OL"]:
+        unidades.append("Ofensiva")
+    elif pos == "K":
+        unidades.append("Equipos Especiales")
+    else:
+        unidades.append("Defensiva")
+
+datos_iniciales = {
+    'Jersey': [item[0] for item in roster_data],
+    'Jugador': [item[1] for item in roster_data],
+    'Posición': [item[2] for item in roster_data],
+    'Unidad': unidades,
+    'Estatus_Medico': ['Activo']*n_jugadores,
+    'Entrenos_Programados': [1]*n_jugadores,
+    'Entrenos_Asistidos': [1]*n_jugadores,
+    'Partidos_Programados': [1]*n_jugadores,
+    'Partidos_Convocados': [1]*n_jugadores,
+    'Yardas_Pase_Partidos': [0.0]*n_jugadores,
+    'Yardas_Acarreo_Partidos': [0.0]*n_jugadores,
+    'Pases_Intentados_Partidos': [0]*n_jugadores,
+    'Pases_Completados_Partidos': [0]*n_jugadores,
+    'Bloqueos_Dominio_Partidos': [0]*n_jugadores,
+    'Capturas_Permitidas_Partidos': [0]*n_jugadores,
+    'Tackleadas_Efectivas_Partidos': [0]*n_jugadores,
+    'Intercepciones_Partidos': [0]*n_jugadores,
+    'Pases_Desviados_Partidos': [0]*n_jugadores,
+    'Capturas_QB_Sacks_Partidos': [0.0]*n_jugadores,
+    'Goles_Campo_Partidos': [0]*n_jugadores,
+    'Puntos_Extra_Partidos': [0]*n_jugadores,
+    'Fumbles_Partidos': [0]*n_jugadores,
+    'Drops_Partidos': [0]*n_jugadores,
+    'Yardas_Pase_Entrenos': [0.0]*n_jugadores,
+    'Yardas_Acarreo_Entrenos': [0.0]*n_jugadores,
+    'Pases_Intentados_Entrenos': [0]*n_jugadores,
+    'Pases_Completados_Entrenos': [0]*n_jugadores,
+    'Bloqueos_Dominio_Entrenos': [0]*n_jugadores,
+    'Capturas_Permitidas_Entrenos': [0]*n_jugadores,
+    'Tackleadas_Efectivas_Entrenos': [0]*n_jugadores,
+    'Intercepciones_Entrenos': [0]*n_jugadores,
+    'Pases_Desviados_Entrenos': [0]*n_jugadores,
+    'Capturas_QB_Sacks_Entrenos': [0.0]*n_jugadores,
+    'Fumbles_Entrenos': [0]*n_jugadores,
+    'Drops_Entrenos': [0]*n_jugadores,
+    'Fatiga_Entreno': [4]*n_jugadores,
+    'Dolor_Muscular': [3]*n_jugadores,
+    'Recuperacion_Entreno': [7]*n_jugadores,
+    'Ansiedad_Competitiva': [5]*n_jugadores,
+    'Confianza_Tactica': [8]*n_jugadores,
+    'Sueno_Prepartido': [7]*n_jugadores,
+    'Historial_Fatiga': [[4, 5, 4]]*n_jugadores,
+    'Historial_Rendimiento_Juego': [[0.0]]*n_jugadores
+}
+
+# --- CONEXIÓN Y CARGA DESDE GOOGLE SHEETS ---
 if 'df' not in st.session_state:
-    roster_data = [
-        (0, "Jioshi Alexander Morrison González", "DL"),
-        (1, "Raúl Rodrigo Blanco Ruiz", "WR"),
-        (2, "Aarón Soriano Vacaseydel", "DB"),
-        (3, "Leonardo David Garza Peña Villamil", "QB"),
-        (4, "Diego Mercado Sánchez", "LB"),
-        (5, "Julio César Hernández Hernández", "DB"),
-        (6, "Abraham González López", "LB"),
-        (7, "Luis Miguel Bañuelos Medina", "DB"),
-        (8, "Luis Higelin Castañón", "DB"),
-        (9, "Joaquín Aramis Carriles Palma", "DL"),
-        (10, "Emiliano Sánchez Hernández", "QB"),
-        (11, "Raymundo Liceá Solano", "DL"),
-        (12, "Christopher Bryan Cardona Padrón", "WR"),
-        (13, "Javier Santiago Vivas Rodríguez", "WR"),
-        (14, "Luis Mario Medrano Silva", "WR"),
-        (15, "Emiliano Álvarez Reyes", "CB"),
-        (16, "Ian Jeyden Aguilar Rodríguez", "LB"),
-        (17, "Jorge Emilio Corona Sandoval", "QB"),
-        (18, "Jahdiel Alejandro Ponce Hernández", "WR"),
-        (19, "Jirvan Velasco González", "LB"),
-        (21, "Armando Moreno Martínez", "DB"),
-        (22, "Juan Pablo Acosta Gutiérrez", "LB"),
-        (23, "Rodrigo Pérez Rivera", "RB"),
-        (24, "David Ceballos Gutiérrez", "CB"),
-        (25, "Diego Jack Cerda Álvarez", "DB"),
-        (26, "Luis Antonio Schrader Rodríguez", "RB"),
-        (27, "Rodrigo Eugenio Villegas Delgado", "LB"),
-        (28, "Sergio Alejandro Cervantes Franzoni", "LB"),
-        (29, "Santiago Yael Juárez González", "CB"),
-        (30, "Néstor Milan Cabrera Botello", "CB"),
-        (31, "Juan Carlos Arreola Ramírez", "LB"),
-        (32, "Alonso Báez Jimarez", "RB"),
-        (33, "Diego Ángel Bañuelos Medina", "LB"),
-        (34, "Emilio Melo Robles", "RB"),
-        (35, "Hussein Manzur Santillán Ríos", "RB"),
-        (39, "Santiago de Cristo Saldaña Sarabia", "LB"),
-        (40, "Yeshua Ocampo García", "LB"),
-        (42, "Alexis Trejo Caudillo", "LB"),
-        (43, "Erick Yael Rodríguez Pérez", "CB"),
-        (44, "Manlio Fabio Hernández Hernández", "RB"),
-        (51, "Francisco Nogueda Carmona", "OL"),
-        (52, "Diego Eliel Contreras Cervantez", "LB"),
-        (53, "Jesús Hernández Álvarez", "OL"),
-        (54, "Victor Barrientos García", "OL"),
-        (58, "Luis Vadhir Corona Torices", "OL"),
-        (59, "Óscar González Real", "LB"),
-        (68, "Jesús Gael Puente Basañez", "OL"),
-        (70, "Carlos Eduardo Aparicio Gasca", "OL"),
-        (71, "Pedro Brito Almaguer", "OL"),
-        (72, "Jesús Eduardo Trejo López", "OL"),
-        (73, "Jesús Fernando Inzunza López", "OL"),
-        (74, "Daniel Romero Quezada", "OL"),
-        (76, "Andrik Sánchez Benítez", "OL"),
-        (77, "Luis Enrique Fernández Vera", "OL"),
-        (80, "Alan Andrés Mariano Malagón", "DB"),
-        (81, "César Adonai Román Castrejón", "WR"),
-        (82, "Jonathan Michel Reyes Pérez", "WR"),
-        (83, "Ángel Santiago Reyes Pérez", "WR"),
-        (84, "Bruno Said Granados Almeida", "WR"),
-        (87, "Emiliano Zamora Jerónimo", "K"),
-        (88, "Kin Xanhun Villafuerte Rodríguez", "WR"),
-        (89, "Ollin Núñez Solano", "OL"),
-        (90, "Rafael Uriel Saavedra Mendoza", "LB"),
-        (91, "Miguel Martínez Ayala", "DL"),
-        (92, "Sergio Paul Bautista Balderrama", "DL"),
-        (94, "Juan Maximiliano Soriano Silva", "DL"),
-        (95, "Saul Bautista Balderrama", "DL"),
-        (98, "Óscar Alan Miranda Becerril", "WR"),
-        (99, "José Manuel Valdéz Orea", "DL")
-    ]
-
-    n_jugadores = len(roster_data)
-    
-    unidades = []
-    for _, _, pos in roster_data:
-        if pos in ["QB", "RB", "WR", "OL"]:
-            unidades.append("Ofensiva")
-        elif pos == "K":
-            unidades.append("Equipos Especiales")
+    try:
+        conn = st.connection("gsheets", type="gsheets")
+        df_cloud = conn.read(worksheet="Sheet1", ttl=0)
+        if not df_cloud.empty and 'Jugador' in df_cloud.columns:
+            # Limpiar listas internas si vienen como texto de la nube
+            st.session_state.df = df_cloud
         else:
-            unidades.append("Defensiva")
+            st.session_state.df = pd.DataFrame(datos_iniciales)
+    except Exception:
+        st.session_state.df = pd.DataFrame(datos_iniciales)
 
-    datos_iniciales = {
-        'Jersey': [item[0] for item in roster_data],
-        'Jugador': [item[1] for item in roster_data],
-        'Posición': [item[2] for item in roster_data],
-        'Unidad': unidades,
-        'Estatus_Medico': ['Activo']*n_jugadores,
-        
-        # Asistencia
-        'Entrenos_Programados': [1]*n_jugadores,
-        'Entrenos_Asistidos': [1]*n_jugadores,
-        'Partidos_Programados': [1]*n_jugadores,
-        'Partidos_Convocados': [1]*n_jugadores,
-        
-        # Rendimiento en campo (Partidos)
-        'Yardas_Pase_Partidos': [0.0]*n_jugadores,
-        'Yardas_Acarreo_Partidos': [0.0]*n_jugadores,
-        'Pases_Intentados_Partidos': [0]*n_jugadores,
-        'Pases_Completados_Partidos': [0]*n_jugadores,
-        'Bloqueos_Dominio_Partidos': [0]*n_jugadores,
-        'Capturas_Permitidas_Partidos': [0]*n_jugadores,
-        'Tackleadas_Efectivas_Partidos': [0]*n_jugadores,
-        'Intercepciones_Partidos': [0]*n_jugadores,
-        'Pases_Desviados_Partidos': [0]*n_jugadores,
-        'Capturas_QB_Sacks_Partidos': [0.0]*n_jugadores,
-        'Goles_Campo_Partidos': [0]*n_jugadores,
-        'Puntos_Extra_Partidos': [0]*n_jugadores,
-        'Fumbles_Partidos': [0]*n_jugadores,
-        'Drops_Partidos': [0]*n_jugadores,
-        
-        # Rendimiento en campo (Entrenamientos)
-        'Yardas_Pase_Entrenos': [0.0]*n_jugadores,
-        'Yardas_Acarreo_Entrenos': [0.0]*n_jugadores,
-        'Pases_Intentados_Entrenos': [0]*n_jugadores,
-        'Pases_Completados_Entrenos': [0]*n_jugadores,
-        'Bloqueos_Dominio_Entrenos': [0]*n_jugadores,
-        'Capturas_Permitidas_Entrenos': [0]*n_jugadores,
-        'Tackleadas_Efectivas_Entrenos': [0]*n_jugadores,
-        'Intercepciones_Entrenos': [0]*n_jugadores,
-        'Pases_Desviados_Entrenos': [0]*n_jugadores,
-        'Capturas_QB_Sacks_Entrenos': [0.0]*n_jugadores,
-        'Fumbles_Entrenos': [0]*n_jugadores,
-        'Drops_Entrenos': [0]*n_jugadores,
-        
-        # Psico 1
-        'Fatiga_Entreno': [4]*n_jugadores,
-        'Dolor_Muscular': [3]*n_jugadores,
-        'Recuperacion_Entreno': [7]*n_jugadores,
-        
-        # Psico 2
-        'Ansiedad_Competitiva': [5]*n_jugadores,
-        'Confianza_Tactica': [8]*n_jugadores,
-        'Sueno_Prepartido': [7]*n_jugadores,
-        
-        'Historial_Fatiga': [[4, 5, 4]]*n_jugadores,
-        'Historial_Rendimiento_Juego': [[0.0]]*n_jugadores
-    }
-    st.session_state.df = pd.DataFrame(datos_iniciales)
+def sincronizar_nube():
+    try:
+        conn = st.connection("gsheets", type="gsheets")
+        conn.update(worksheet="Sheet1", data=st.session_state.df)
+    except Exception:
+        pass
 
 if 'active_idx' not in st.session_state:
     st.session_state.active_idx = None
@@ -194,23 +200,14 @@ tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
 # --- PESTAÑA 4: REGISTRO DE DATOS EN VIVO ---
 with tab4:
     st.header("Registro de Datos y Mesa Táctil en Vivo")
-    st.write("Elige el modo de operación para registrar estadísticas de partido o métricas técnicas y físicas en entrenamientos.")
-
     tipo_modo_registro = st.radio("Modo de Operación:", ["Partido Oficial (Mesa Táctil)", "Entrenamiento Semanal (Mesa Técnica y Carga)"], horizontal=True, key="modo_reg_live")
-
     st.divider()
 
     if tipo_modo_registro == "Partido Oficial (Mesa Táctil)":
         contexto_jornada = st.selectbox("Selecciona la Jornada Oficial", [
-            "J1 - Leones Anáhuac (Visita)", 
-            "J2 - Burros Blancos (Local - EOU)", 
-            "J3 - ITESM Puebla (Local - EOU)", 
-            "J4 - ITESM Mty (Local)", 
-            "J5 - ITESM CEM (Local - EOU)", 
-            "J6 - Linces UVM (Visita)", 
-            "J7 - Águilas Blancas (Local - EOU)", 
-            "J8 - Aztecas UDLAP (Local)", 
-            "J9 - Leones UAC (Local - EOU)"
+            "J1 - Leones Anáhuac (Visita)", "J2 - Burros Blancos (Local - EOU)", "J3 - ITESM Puebla (Local - EOU)", 
+            "J4 - ITESM Mty (Local)", "J5 - ITESM CEM (Local - EOU)", "J6 - Linces UVM (Visita)", 
+            "J7 - Águilas Blancas (Local - EOU)", "J8 - Aztecas UDLAP (Local)", "J9 - Leones UAC (Local - EOU)"
         ], key="jornada_live_sel")
 
         tipo_seleccion_mesa = st.radio("Método de captura:", ["Lista del Roster", "Número de Jersey Exprés"], horizontal=True, key="tipo_mesa_sel")
@@ -230,16 +227,11 @@ with tab4:
             def format_live_player(nombre):
                 sub_df = st.session_state.df[st.session_state.df['Jugador'] == nombre]
                 if not sub_df.empty:
-                    pos = sub_df['Posición'].values[0]
-                    jersey = sub_df['Jersey'].values[0]
-                    return f"#{jersey} - {nombre} ({pos})"
+                    return f"#{sub_df['Jersey'].values[0]} - {nombre} ({sub_df['Posición'].values[0]})"
                 return nombre
 
             with col_m3:
-                if len(jugadores_live_list) > 0:
-                    jugador_seleccionado_roster = st.selectbox("Jugador", jugadores_live_list, format_func=format_live_player, key="live_jugador_box")
-                else:
-                    jugador_seleccionado_roster = None
+                jugador_seleccionado_roster = st.selectbox("Jugador", jugadores_live_list, format_func=format_live_player, key="live_jugador_box") if jugadores_live_list else None
 
             if st.button("Confirmar y Seleccionar Atleta"):
                 if jugador_seleccionado_roster:
@@ -249,7 +241,6 @@ with tab4:
                         st.session_state.active_jugador_nombre = match_j['Jugador'].values[0]
                         st.session_state.active_pos = match_j['Posición'].values[0]
                         st.success(f"Atleta seleccionado: **{st.session_state.active_jugador_nombre}** ({st.session_state.active_pos})")
-
         else:
             col_ex1, col_ex2 = st.columns(2)
             with col_ex1:
@@ -260,18 +251,16 @@ with tab4:
             if st.button("Confirmar y Cargar por Jersey"):
                 unidad_asignada = "Ofensiva" if pos_exprs in ["QB", "RB", "WR", "OL"] else ("Equipos Especiales" if pos_exprs == "K" else "Defensiva")
                 match_jersey = st.session_state.df[st.session_state.df['Jersey'] == int(jersey_exprs)]
-                
                 if not match_jersey.empty:
                     idx_found = match_jersey.index[0]
                     st.session_state.df.at[idx_found, 'Posición'] = pos_exprs
                     st.session_state.df.at[idx_found, 'Unidad'] = unidad_asignada
-                    
                     st.session_state.active_idx = idx_found
                     st.session_state.active_jugador_nombre = st.session_state.df.at[idx_found, 'Jugador']
                     st.session_state.active_pos = pos_exprs
                     st.success(f"Atleta cargado: **{st.session_state.active_jugador_nombre}** (#{jersey_exprs} - {pos_exprs})")
                 else:
-                    st.error("No se encontró ningún jugador con ese número de jersey en el roster.")
+                    st.error("No se encontró ningún jugador con ese número de jersey.")
 
         if st.session_state.active_idx is not None and st.session_state.active_jugador_nombre is not None:
             idx_live = st.session_state.active_idx
@@ -280,112 +269,126 @@ with tab4:
 
             st.divider()
             st.subheader(f"Registrar Acciones de Partido para: {jugador_live} ({pos_live}) [{contexto_jornada}]")
-
             if st.session_state.df.at[idx_live, 'Partidos_Convocados'] == 0:
                 st.session_state.df.at[idx_live, 'Partidos_Convocados'] = 1
 
             if pos_live == 'QB':
                 col_q1, col_q2, col_q3, col_q4 = st.columns(4)
                 with col_q1:
-                    yds_pase = st.number_input("Yardas Aéreas (Passing)", min_value=-15, max_value=99, value=10, step=1, key="qb_ypase")
+                    yds_pase = st.number_input("Yardas Aéreas", min_value=-15, max_value=99, value=10, key="qb_ypase")
                     if st.button("Sumar Yardas Aéreas"):
                         st.session_state.df.at[idx_live, 'Yardas_Pase_Partidos'] += yds_pase
-                        st.success(f"{yds_pase} yardas aéreas sumadas.")
+                        sincronizar_nube()
+                        st.success("Yardas sumadas.")
                 with col_q2:
-                    yds_rush = st.number_input("Yardas Terrestres (Rushing)", min_value=-10, max_value=99, value=5, step=1, key="qb_yrush")
+                    yds_rush = st.number_input("Yardas Terrestres", min_value=-10, max_value=99, value=5, key="qb_yrush")
                     if st.button("Sumar Rushing Yards"):
                         st.session_state.df.at[idx_live, 'Yardas_Acarreo_Partidos'] += yds_rush
-                        st.success(f"{yds_rush} rushing yards sumadas.")
+                        sincronizar_nube()
+                        st.success("Yardas sumadas.")
                 with col_q3:
                     if st.button("Pase Completado"):
                         st.session_state.df.at[idx_live, 'Pases_Intentados_Partidos'] += 1
                         st.session_state.df.at[idx_live, 'Pases_Completados_Partidos'] += 1
-                        st.success("Pase completado registrado.")
+                        sincronizar_nube()
+                        st.success("Completado.")
                 with col_q4:
                     if st.button("Pase Incompleto"):
                         st.session_state.df.at[idx_live, 'Pases_Intentados_Partidos'] += 1
-                        st.success("Pase incompleto registrado.")
+                        sincronizar_nube()
+                        st.success("Incompleto.")
 
             elif pos_live == 'RB':
                 col_r1, col_r2 = st.columns(2)
                 with col_r1:
-                    yds_rush = st.number_input("Yardas Terrestres (Rushing Yards)", min_value=-5, max_value=99, value=5, step=1, key="rb_yrush")
+                    yds_rush = st.number_input("Yardas Terrestres", min_value=-5, max_value=99, value=5, key="rb_yrush")
                     if st.button("Sumar Rushing Yards"):
                         st.session_state.df.at[idx_live, 'Yardas_Acarreo_Partidos'] += yds_rush
-                        st.success(f"{yds_rush} rushing yards sumadas a {jugador_live}.")
+                        sincronizar_nube()
+                        st.success("Yardas sumadas.")
                 with col_r2:
                     if st.button("Registrar Fumble"):
                         st.session_state.df.at[idx_live, 'Fumbles_Partidos'] += 1
-                        st.error(f"Fumble registrado para {jugador_live}.")
+                        sincronizar_nube()
+                        st.error("Fumble registrado.")
 
             elif pos_live == 'WR':
                 col_w1, col_w2 = st.columns(2)
                 with col_w1:
-                    yds_rec = st.number_input("Yardas de Recepción", min_value=-5, max_value=99, value=10, step=1, key="wr_yrec")
+                    yds_rec = st.number_input("Yardas de Recepción", min_value=-5, max_value=99, value=10, key="wr_yrec")
                     if st.button("Sumar Yardas de Recepción"):
                         st.session_state.df.at[idx_live, 'Yardas_Pase_Partidos'] += yds_rec
-                        st.success(f"{yds_rec} yardas de recepción sumadas.")
+                        sincronizar_nube()
+                        st.success("Yardas sumadas.")
                 with col_w2:
-                    if st.button("Registrar Drop (Balón Suelto/Dejado Caer)"):
+                    if st.button("Registrar Drop"):
                         st.session_state.df.at[idx_live, 'Drops_Partidos'] += 1
-                        st.warning(f"Drop registrado para {jugador_live}.")
+                        sincronizar_nube()
+                        st.warning("Drop registrado.")
 
             elif pos_live == 'OL':
                 col_ol1, col_ol2 = st.columns(2)
                 with col_ol1:
                     if st.button("Bloqueo Efectivo"):
                         st.session_state.df.at[idx_live, 'Bloqueos_Dominio_Partidos'] += 1
+                        sincronizar_nube()
                         st.success("Bloqueo registrado.")
                 with col_ol2:
                     if st.button("Sack Permitido"):
                         st.session_state.df.at[idx_live, 'Capturas_Permitidas_Partidos'] += 1
-                        st.success("Sack permitido registrado.")
+                        sincronizar_nube()
+                        st.success("Sack permitido.")
 
             elif pos_live in ['DL', 'LB']:
                 col_d1, col_d2, col_d3 = st.columns(3)
                 with col_d1:
                     if st.button("Tackleada Efectiva"):
                         st.session_state.df.at[idx_live, 'Tackleadas_Efectivas_Partidos'] += 1
-                        st.success("Tackleada registrada.")
+                        sincronizar_nube()
+                        st.success("Tackleada.")
                 with col_d2:
                     if st.button("Sack Defensivo"):
                         st.session_state.df.at[idx_live, 'Capturas_QB_Sacks_Partidos'] += 1.0
-                        st.success("Sack registrado.")
+                        sincronizar_nube()
+                        st.success("Sack.")
                 with col_d3:
-                    if st.button("Pase Desviado / Bloqueado (PBU)"):
+                    if st.button("Pase Desviado (PBU)"):
                         st.session_state.df.at[idx_live, 'Pases_Desviados_Partidos'] += 1
-                        st.success("Pase desviado (PBU) registrado.")
+                        sincronizar_nube()
+                        st.success("PBU.")
 
             elif pos_live in ['DB', 'CB']:
                 col_db1, col_db2, col_db3 = st.columns(3)
                 with col_db1:
                     if st.button("Tackleada Efectiva"):
                         st.session_state.df.at[idx_live, 'Tackleadas_Efectivas_Partidos'] += 1
-                        st.success("Tackleada registrada.")
+                        sincronizar_nube()
+                        st.success("Tackleada.")
                 with col_db2:
                     if st.button("Intercepción (INT)"):
                         st.session_state.df.at[idx_live, 'Intercepciones_Partidos'] += 1
-                        st.success("Intercepción registrada.")
+                        sincronizar_nube()
+                        st.success("INT.")
                 with col_db3:
-                    if st.button("Pase Desviado / Bloqueado (PBU)"):
+                    if st.button("Pase Desviado (PBU)"):
                         st.session_state.df.at[idx_live, 'Pases_Desviados_Partidos'] += 1
-                        st.success("Pase desviado (PBU) registrado.")
+                        sincronizar_nube()
+                        st.success("PBU.")
 
             elif pos_live == 'K':
                 col_k1, col_k2 = st.columns(2)
                 with col_k1:
                     if st.button("Gol de Campo (3 pts)"):
                         st.session_state.df.at[idx_live, 'Goles_Campo_Partidos'] += 1
-                        st.success("Gol de campo registrado.")
+                        sincronizar_nube()
+                        st.success("FG.")
                 with col_k2:
                     if st.button("Punto Extra (PAT)"):
                         st.session_state.df.at[idx_live, 'Puntos_Extra_Partidos'] += 1
-                        st.success("Punto extra registrado.")
-
+                        sincronizar_nube()
+                        st.success("PAT.")
     else:
-        # Modo Entrenamiento con Calendario Editable y Métricas Técnicas
         st.subheader("Registro de Práctica: Carga Física y Técnica")
-        
         col_cal1, col_cal2 = st.columns(2)
         with col_cal1:
             fecha_entreno = st.date_input("📅 Fecha de la Práctica", value=date.today(), key="calendar_entreno_date")
@@ -394,15 +397,12 @@ with tab4:
 
         unidad_entreno_sel = st.selectbox("Selecciona la Unidad", st.session_state.df['Unidad'].unique(), key="entreno_unidad_live")
         pos_entreno_sel = st.selectbox("Selecciona la Posición", st.session_state.df[st.session_state.df['Unidad'] == unidad_entreno_sel]['Posición'].unique(), key="entreno_pos_live")
-        
         jugadores_entreno_list = st.session_state.df[(st.session_state.df['Unidad'] == unidad_entreno_sel) & (st.session_state.df['Posición'] == pos_entreno_sel)]['Jugador'].tolist()
 
         def format_entreno_player(nombre):
             sub_df = st.session_state.df[st.session_state.df['Jugador'] == nombre]
             if not sub_df.empty:
-                pos = sub_df['Posición'].values[0]
-                jersey = sub_df['Jersey'].values[0]
-                return f"#{jersey} - {nombre} ({pos})"
+                return f"#{sub_df['Jersey'].values[0]} - {nombre} ({sub_df['Posición'].values[0]})"
             return nombre
 
         jugador_entreno_sel = st.selectbox("Selecciona al Atleta", jugadores_entreno_list, format_func=format_entreno_player, key="entreno_atleta_live")
@@ -413,29 +413,22 @@ with tab4:
 
             with st.form("form_registro_entreno_live"):
                 st.markdown(f"**Registrando sesión para:** {jugador_entreno_sel} ({pos_ent}) — Fecha: `{fecha_entreno}`")
-                
-                st.markdown("---")
-                st.markdown("##### 🏋️ Bienestar y Carga Física")
                 fatiga_ent_val = st.slider("Fatiga Física Acumulada (1-10)", 1, 10, int(st.session_state.df.at[idx_ent, 'Fatiga_Entreno']))
                 dolor_ent_val = st.slider("Dolor Muscular / Molestias (1-10)", 1, 10, int(st.session_state.df.at[idx_ent, 'Dolor_Muscular']))
                 recup_ent_val = st.slider("Nivel de Recuperación / Frescura (1-10)", 1, 10, int(st.session_state.df.at[idx_ent, 'Recuperacion_Entreno']))
-                
-                asist_ent_val = st.selectbox("Asistencia al Entrenamiento", ["Asistió", "No Asistió"])
+                asist_ent_val = st.selectbox("Asistencia a la Sesión", ["Asistió", "No Asistió"])
                 estatus_med_val = st.selectbox("Estatus Médico", ["Activo", "Precaución Médica", "Lesionado / Inactivo"])
 
-                st.markdown("---")
-                st.markdown("##### 🏈 Rendimiento Técnico en Práctica")
-                
                 n_ypase_ent, n_yrush_ent, n_p_int_ent, n_p_comp_ent = 0.0, 0.0, 0, 0
                 n_pancakes_ent, n_sacks_perm_ent, n_fumbles_ent, n_drops_ent = 0, 0, 0, 0
                 n_tack_ent, n_int_ent, n_pbu_ent, n_sacks_def_ent = 0, 0, 0, 0.0
 
                 if pos_ent == 'QB':
-                    n_ypase_ent = st.number_input("Yardas Aéreas (Passing) en Práctica", min_value=-10.0, value=0.0)
-                    n_yrush_ent = st.number_input("Yardas Terrestres (Rushing) en Práctica", min_value=-10.0, value=0.0)
+                    n_ypase_ent = st.number_input("Yardas Aéreas en Práctica", min_value=-10.0, value=0.0)
+                    n_yrush_ent = st.number_input("Yardas Terrestres en Práctica", min_value=-10.0, value=0.0)
                     col_ep1, col_ep2 = st.columns(2)
-                    with col_ep1: n_p_comp_ent = st.number_input("Pases Completados en Práctica", min_value=0, value=0)
-                    with col_ep2: n_p_int_ent = st.number_input("Pases Intentados en Práctica", min_value=0, value=0)
+                    with col_ep1: n_p_comp_ent = st.number_input("Pases Completados", min_value=0, value=0)
+                    with col_ep2: n_p_int_ent = st.number_input("Pases Intentados", min_value=0, value=0)
                 elif pos_ent == 'RB':
                     n_yrush_ent = st.number_input("Rushing Yards en Práctica", min_value=-5.0, value=0.0)
                     n_fumbles_ent = st.number_input("Fumbles en Práctica", min_value=0, value=0)
@@ -446,26 +439,23 @@ with tab4:
                     n_pancakes_ent = st.number_input("Bloqueos en Práctica", min_value=0, value=0)
                     n_sacks_perm_ent = st.number_input("Sacks Permitidos en Práctica", min_value=0, value=0)
                 elif pos_ent in ['DL', 'LB']:
-                    n_tack_ent = st.number_input("Tackleadas Efectivas en Práctica", min_value=0, value=0)
+                    n_tack_ent = st.number_input("Tackleadas en Práctica", min_value=0, value=0)
                     n_sacks_def_ent = st.number_input("Sacks Defensivos en Práctica", min_value=0.0, value=0.0, step=0.5)
-                    n_pbu_ent = st.number_input("Pases Desviados / PBU en Práctica", min_value=0, value=0)
+                    n_pbu_ent = st.number_input("Pases Desviados / PBU", min_value=0, value=0)
                 elif pos_ent in ['DB', 'CB']:
-                    n_tack_ent = st.number_input("Tackleadas Efectivas en Práctica", min_value=0, value=0)
+                    n_tack_ent = st.number_input("Tackleadas en Práctica", min_value=0, value=0)
                     n_int_ent = st.number_input("Intercepciones en Práctica", min_value=0, value=0)
-                    n_pbu_ent = st.number_input("Pases Desviados / PBU en Práctica", min_value=0, value=0)
+                    n_pbu_ent = st.number_input("Pases Desviados / PBU", min_value=0, value=0)
 
                 guardar_entreno_btn = st.form_submit_button("Guardar Registro Completo de Práctica")
                 if guardar_entreno_btn:
                     st.session_state.df.at[idx_ent, 'Entrenos_Programados'] += 1
                     if asist_ent_val == "Asistió":
                         st.session_state.df.at[idx_ent, 'Entrenos_Asistidos'] += 1
-                    
                     st.session_state.df.at[idx_ent, 'Fatiga_Entreno'] = fatiga_ent_val
                     st.session_state.df.at[idx_ent, 'Dolor_Muscular'] = dolor_ent_val
                     st.session_state.df.at[idx_ent, 'Recuperacion_Entreno'] = recup_ent_val
                     st.session_state.df.at[idx_ent, 'Estatus_Medico'] = estatus_med_val
-
-                    # Acumular métricas técnicas de entreno
                     st.session_state.df.at[idx_ent, 'Yardas_Pase_Entrenos'] += n_ypase_ent
                     st.session_state.df.at[idx_ent, 'Yardas_Acarreo_Entrenos'] += n_yrush_ent
                     st.session_state.df.at[idx_ent, 'Pases_Intentados_Entrenos'] += n_p_int_ent
@@ -484,52 +474,42 @@ with tab4:
                     if len(hist_f) > 5: hist_f.pop(0)
                     st.session_state.df.at[idx_ent, 'Historial_Fatiga'] = hist_f
 
-                    st.success(f"Práctica del {fecha_entreno} guardada exitosamente para {jugador_entreno_sel}.")
+                    sincronizar_nube()
+                    st.success(f"Práctica guardada para {jugador_entreno_sel}.")
 
 # --- PESTAÑA 5: EVALUACIÓN PSICODEPORTIVA ---
 with tab5:
     st.header("🧠 Evaluación y Monitoreo Psicodeportivo")
-    st.write("Registra las evaluaciones de mitad de semana (fatiga/dolor) o la activación pre-partido (ansiedad/sueño).")
-
     unidad_psi = st.selectbox("Selecciona la Unidad", st.session_state.df['Unidad'].unique(), key="psi_unidad_sel")
     pos_psi = st.selectbox("Selecciona la Posición", st.session_state.df[st.session_state.df['Unidad'] == unidad_psi]['Posición'].unique(), key="psi_pos_sel")
-    
     jugadores_psi_list = st.session_state.df[(st.session_state.df['Unidad'] == unidad_psi) & (st.session_state.df['Posición'] == pos_psi)]['Jugador'].tolist()
 
     def format_psi_player(nombre):
         sub_df = st.session_state.df[st.session_state.df['Jugador'] == nombre]
         if not sub_df.empty:
-            pos = sub_df['Posición'].values[0]
-            jersey = sub_df['Jersey'].values[0]
-            return f"#{jersey} - {nombre} ({pos})"
+            return f"#{sub_df['Jersey'].values[0]} - {nombre} ({sub_df['Posición'].values[0]})"
         return nombre
 
-    jugador_psi_sel = st.selectbox("Selecciona al Atleta", jugadores_psi_list, format_func=format_psi_player, key="psi_jugador_sel")
+    jugador_psi_sel = st.selectbox("Selecciona al Atleta", jugadores_psi_list, format_func=format_psi_player, key="psi_jugador_sel") if jugadores_psi_list else None
 
     if jugador_psi_sel:
         idx_psi = st.session_state.df.index[st.session_state.df['Jugador'] == jugador_psi_sel].tolist()[0]
-        
-        tipo_encuesta = st.selectbox(
-            "Selecciona el tipo de evaluación:", 
-            ["Evaluación de Mitad de Semana (Entrenamiento)", "Evaluación Pre-partido (Matchday)"]
-        )
+        tipo_encuesta = st.selectbox("Selecciona el tipo de evaluación:", ["Evaluación de Mitad de Semana (Entrenamiento)", "Evaluación Pre-partido (Matchday)"])
 
         with st.form("form_psicodeportivo_ind"):
             if tipo_encuesta == "Evaluación de Mitad de Semana (Entrenamiento)":
-                st.markdown("#### Factores de Carga y Fatiga en Entrenamientos")
                 fatiga_val = st.slider("Fatiga Física Acumulada (1-10)", 1, 10, int(st.session_state.df.at[idx_psi, 'Fatiga_Entreno']))
                 dolor_val = st.slider("Dolor Muscular / Molestias (1-10)", 1, 10, int(st.session_state.df.at[idx_psi, 'Dolor_Muscular']))
                 recup_val = st.slider("Nivel de Recuperación (1-10)", 1, 10, int(st.session_state.df.at[idx_psi, 'Recuperacion_Entreno']))
                 asist_ent = st.selectbox("Asistencia al Entrenamiento", ["Asistió", "No Asistió"])
             else:
-                st.markdown("#### Factores Psicológicos y de Activación Pre-partido")
                 ansiedad_val = st.slider("Nivel de Ansiedad / Activación (1-10)", 1, 10, int(st.session_state.df.at[idx_psi, 'Ansiedad_Competitiva']))
                 confianza_val = st.slider("Confianza en el Plan de Juego (1-10)", 1, 10, int(st.session_state.df.at[idx_psi, 'Confianza_Tactica']))
                 sueno_val = st.slider("Horas de Sueño Noche Previa", 1, 12, int(st.session_state.df.at[idx_psi, 'Sueno_Prepartido']))
 
             estatus_med = st.selectbox("Estatus Médico / Disponibilidad", ["Activo", "Precaución Médica", "Lesionado / Inactivo"])
-
             guardar_psi = st.form_submit_button("Guardar Evaluación Psicológica")
+            
             if guardar_psi:
                 st.session_state.df.at[idx_psi, 'Estatus_Medico'] = estatus_med
                 if tipo_encuesta == "Evaluación de Mitad de Semana (Entrenamiento)":
@@ -539,7 +519,6 @@ with tab5:
                     st.session_state.df.at[idx_psi, 'Entrenos_Programados'] += 1
                     if asist_ent == "Asistió":
                         st.session_state.df.at[idx_psi, 'Entrenos_Asistidos'] += 1
-                    
                     hist_f = st.session_state.df.at[idx_psi, 'Historial_Fatiga']
                     hist_f.append(fatiga_val)
                     if len(hist_f) > 5: hist_f.pop(0)
@@ -549,99 +528,65 @@ with tab5:
                     st.session_state.df.at[idx_psi, 'Confianza_Tactica'] = confianza_val
                     st.session_state.df.at[idx_psi, 'Sueno_Prepartido'] = sueno_val
 
-                st.success(f"Evaluación guardada exitosamente para {jugador_psi_sel}.")
+                sincronizar_nube()
+                st.success(f"Evaluación guardada para {jugador_psi_sel}.")
 
 # --- PESTAÑA 2: BASE DE DATOS Y GESTIÓN DE ROSTER ---
 with tab2:
     st.header("Gestión del Roster y Base de Datos Analítica")
-    st.write("Puedes editar directamente cualquier celda en las siguientes tablas (nombres, estatus, estadísticas, bienestar).")
-
-    sub_psi, sub_of, sub_def, sub_st = st.tabs([
-        "Bienestar y Estatus Médico", 
-        "Unidad Ofensiva", 
-        "Unidad Defensiva", 
-        "Equipos Especiales"
-    ])
+    sub_psi, sub_of, sub_def, sub_st = st.tabs(["Bienestar y Estatus Médico", "Unidad Ofensiva", "Unidad Defensiva", "Equipos Especiales"])
 
     with sub_psi:
-        st.subheader("Edición Directa: Bienestar Psicológico y Estatus Médico")
-        cols_psi_all = [
-            'Jersey', 'Jugador', 'Posición', 'Unidad', 'Estatus_Medico',
-            'Fatiga_Entreno', 'Dolor_Muscular', 'Recuperacion_Entreno',
-            'Ansiedad_Competitiva', 'Confianza_Tactica', 'Sueno_Prepartido'
-        ]
+        cols_psi_all = ['Jersey', 'Jugador', 'Posición', 'Unidad', 'Estatus_Medico', 'Fatiga_Entreno', 'Dolor_Muscular', 'Recuperacion_Entreno', 'Ansiedad_Competitiva', 'Confianza_Tactica', 'Sueno_Prepartido']
         df_psi_edit = st.data_editor(st.session_state.df[cols_psi_all], use_container_width=True, hide_index=True, key="editor_psi_direct")
         if not df_psi_edit.equals(st.session_state.df[cols_psi_all]):
             st.session_state.df.update(df_psi_edit)
-            st.success("Datos de bienestar actualizados.")
+            sincronizar_nube()
+            st.success("Bienestar actualizado.")
 
     with sub_of:
-        st.subheader("Edición Directa: Rendimiento Ofensivo (Passing, Rushing, Fumbles & Drops)")
         df_of = st.session_state.df[st.session_state.df['Unidad'] == 'Ofensiva'].copy()
-        cols_of_view = [
-            'Jersey', 'Jugador', 'Posición', 'Partidos_Convocados', 
-            'Yardas_Pase_Partidos', 'Yardas_Acarreo_Partidos', 
-            'Pases_Intentados_Partidos', 'Pases_Completados_Partidos',
-            'Bloqueos_Dominio_Partidos', 'Capturas_Permitidas_Partidos',
-            'Fumbles_Partidos', 'Drops_Partidos'
-        ]
+        cols_of_view = ['Jersey', 'Jugador', 'Posición', 'Partidos_Convocados', 'Yardas_Pase_Partidos', 'Yardas_Acarreo_Partidos', 'Pases_Intentados_Partidos', 'Pases_Completados_Partidos', 'Bloqueos_Dominio_Partidos', 'Capturas_Permitidas_Partidos', 'Fumbles_Partidos', 'Drops_Partidos']
         df_of_edited = st.data_editor(df_of[cols_of_view], use_container_width=True, hide_index=True, key="edit_of_direct")
         if not df_of_edited.equals(df_of[cols_of_view]):
             st.session_state.df.update(df_of_edited)
-            st.success("Estadísticas ofensivas actualizadas.")
+            sincronizar_nube()
+            st.success("Ofensiva actualizada.")
 
     with sub_def:
-        st.subheader("Edición Directa: Rendimiento Defensivo (Incluyendo PBU)")
         df_def = st.session_state.df[st.session_state.df['Unidad'] == 'Defensiva'].copy()
-        cols_def_view = [
-            'Jersey', 'Jugador', 'Posición', 'Partidos_Convocados',
-            'Tackleadas_Efectivas_Partidos', 'Intercepciones_Partidos', 'Pases_Desviados_Partidos', 'Capturas_QB_Sacks_Partidos'
-        ]
+        cols_def_view = ['Jersey', 'Jugador', 'Posición', 'Partidos_Convocados', 'Tackleadas_Efectivas_Partidos', 'Intercepciones_Partidos', 'Pases_Desviados_Partidos', 'Capturas_QB_Sacks_Partidos']
         df_def_edited = st.data_editor(df_def[cols_def_view], use_container_width=True, hide_index=True, key="edit_def_direct")
         if not df_def_edited.equals(df_def[cols_def_view]):
             st.session_state.df.update(df_def_edited)
-            st.success("Estadísticas defensivas actualizadas.")
+            sincronizar_nube()
+            st.success("Defensiva actualizada.")
 
     with sub_st:
-        st.subheader("Edición Directa: Equipos Especiales")
         df_st = st.session_state.df[st.session_state.df['Posición'] == 'K'].copy()
-        cols_st_view = [
-            'Jersey', 'Jugador', 'Posición', 'Partidos_Convocados',
-            'Goles_Campo_Partidos', 'Puntos_Extra_Partidos'
-        ]
+        cols_st_view = ['Jersey', 'Jugador', 'Posición', 'Partidos_Convocados', 'Goles_Campo_Partidos', 'Puntos_Extra_Partidos']
         df_st_edited = st.data_editor(df_st[cols_st_view], use_container_width=True, hide_index=True, key="edit_st_direct")
         if not df_st_edited.equals(df_st[cols_st_view]):
             st.session_state.df.update(df_st_edited)
-            st.success("Estadísticas de pateo actualizadas.")
+            sincronizar_nube()
+            st.success("Equipos especiales actualizados.")
 
 # --- PESTAÑA 6: CALENDARIO ---
 with tab6:
     st.header("Calendario Oficial ONEFA 2026 y Planificación Psicológica")
-    st.write("Consulta las fechas de la temporada, sedes actualizadas (Estadio Olímpico Universitario - EOU) y el programa de evaluaciones.")
-    
     df_calendario = pd.DataFrame({
         'Jornada': ['J1', 'J2', 'J3', 'J4', 'J5', 'J6', 'J7', 'J8', 'J9', 'J10'],
         'Fecha': ['4 Sep', '12 Sep', '18 Sep', '25 Sep', '3 Oct', '9 Oct', '17 Oct', '24 Oct', '30 Oct', 'Noviembre'],
         'Rival': ['Leones Anáhuac', 'Burros Blancos', 'ITESM Puebla', 'ITESM Mty', 'ITESM CEM', 'Linces UVM', 'Águilas Blancas', 'Aztecas UDLAP', 'Leones UAC', 'BYE (Descanso)'],
-        'Sede / Condición': [
-            'Visita (Cueva del León)', 'Local (EOU)', 'Local (EOU)', 'Local (Borregos)', 
-            'Local (EOU)', 'Visita (JOM)', 'Local (EOU)', 'Local (Templo del Dolor)', 'Local (EOU)', 'Descanso'
-        ],
-        'Evaluaciones Clave': [
-            'Mié (Fatiga/Dolor) & Vie (Ansiedad/Confianza)', 'Mié & Vie', 'Mié & Vie', 'Mié & Vie', 
-            'Mié & Vie', 'Mié & Vie', 'Mié & Vie', 'Mié & Vie', 'Mié & Vie', 'Descanso'
-        ]
+        'Sede / Condición': ['Visita (Cueva del León)', 'Local (EOU)', 'Local (EOU)', 'Local (Borregos)', 'Local (EOU)', 'Visita (JOM)', 'Local (EOU)', 'Local (Templo del Dolor)', 'Local (EOU)', 'Descanso'],
+        'Evaluaciones Clave': ['Mié & Vie', 'Mié & Vie', 'Mié & Vie', 'Mié & Vie', 'Mié & Vie', 'Mié & Vie', 'Mié & Vie', 'Mié & Vie', 'Mié & Vie', 'Descanso']
     })
-    
     st.dataframe(df_calendario, use_container_width=True, hide_index=True)
 
 # --- PESTAÑA 3: BOX SCORE OFICIAL ---
 with tab3:
     st.header("Box Score Oficial y Estadísticas por Categoría")
-    st.write("Consulta y edita los acumulados oficiales tanto de Partidos Oficiales como de Entrenamientos Semanales.")
-    
     df_global = st.session_state.df.copy()
-    
     tipo_box_view = st.radio("Selecciona el Bloque de Box Score:", ["🏟️ Partidos Oficiales", "🏋️ Entrenamientos Semanales"], horizontal=True, key="tipo_box_view_radio")
     st.divider()
 
@@ -656,7 +601,7 @@ with tab3:
             })
             box_passing_edit = st.data_editor(box_passing, use_container_width=True, hide_index=True, key="box_pass_edit")
             if not box_passing_edit.equals(box_passing):
-                st.success("Box score de ofensiva (partidos) actualizado.")
+                st.success("Box score actualizado.")
 
         st.subheader("🏟️ PARTIDOS: BLOQUEOS Y PROTECCIÓN (OL)")
         df_ol = df_global[df_global['Posición'] == 'OL'].copy()
@@ -666,7 +611,7 @@ with tab3:
             })
             box_blocking_edit = st.data_editor(box_blocking, use_container_width=True, hide_index=True, key="box_block_edit")
             if not box_blocking_edit.equals(box_blocking):
-                st.success("Box score de línea ofensiva (partidos) actualizado.")
+                st.success("Box score actualizado.")
 
         st.subheader("🏟️ PARTIDOS: DEFENSE (Front 7 & Secundaria)")
         df_def = df_global[df_global['Unidad'] == 'Defensiva'].copy()
@@ -677,18 +622,17 @@ with tab3:
             })
             box_def_edit = st.data_editor(box_defense, use_container_width=True, hide_index=True, key="box_def_edit")
             if not box_def_edit.equals(box_def_edit):
-                st.success("Box score defensivo (partidos) actualizado.")
+                st.success("Box score actualizado.")
 
         st.subheader("🏟️ PARTIDOS: KICKING & SPECIAL TEAMS")
         df_st = df_global[df_global['Posición'] == 'K'].copy()
         if not df_st.empty:
             box_st = df_st[['Jersey', 'Jugador', 'Posición', 'Goles_Campo_Partidos', 'Puntos_Extra_Partidos']].rename(columns={
-                'Jersey': 'NO.', 'Jugador': 'JUGADOR', 'Posición': 'POS', 'Goles_Campo_Partidos': 'FG (Goles de Campo)', 'Puntos_Extra_Partidos': 'PAT (Puntos Extra)'
+                'Jersey': 'NO.', 'Jugador': 'JUGADOR', 'Posición': 'POS', 'Goles_Campo_Partidos': 'FG', 'Puntos_Extra_Partidos': 'PAT'
             })
             box_st_edit = st.data_editor(box_st, use_container_width=True, hide_index=True, key="box_st_edit")
             if not box_st_edit.equals(box_st):
-                st.success("Box score de pateo (partidos) actualizado.")
-
+                st.success("Box score actualizado.")
     else:
         st.subheader("🏋️ ENTRENAMIENTOS: OFENSIVA (Passing, Rushing, Fumbles & Drops)")
         df_of_e = df_global[df_global['Unidad'] == 'Ofensiva'].copy()
@@ -700,7 +644,7 @@ with tab3:
             })
             box_pass_ent_edit = st.data_editor(box_passing_ent, use_container_width=True, hide_index=True, key="box_pass_ent_edit")
             if not box_pass_ent_edit.equals(box_passing_ent):
-                st.success("Box score de ofensiva (entrenamientos) actualizado.")
+                st.success("Box score actualizado.")
 
         st.subheader("🏋️ ENTRENAMIENTOS: BLOQUEOS Y PROTECCIÓN (OL)")
         df_ol_e = df_global[df_global['Posición'] == 'OL'].copy()
@@ -710,7 +654,7 @@ with tab3:
             })
             box_block_ent_edit = st.data_editor(box_blocking_ent, use_container_width=True, hide_index=True, key="box_block_ent_edit")
             if not box_block_ent_edit.equals(box_blocking_ent):
-                st.success("Box score de línea ofensiva (entrenamientos) actualizado.")
+                st.success("Box score actualizado.")
 
         st.subheader("🏋️ ENTRENAMIENTOS: DEFENSE (Front 7 & Secundaria)")
         df_def_e = df_global[df_global['Unidad'] == 'Defensiva'].copy()
@@ -721,7 +665,7 @@ with tab3:
             })
             box_def_ent_edit = st.data_editor(box_defense_ent, use_container_width=True, hide_index=True, key="box_def_ent_edit")
             if not box_def_ent_edit.equals(box_defense_ent):
-                st.success("Box score defensivo (entrenamientos) actualizado.")
+                st.success("Box score actualizado.")
 
 # --- PESTAÑA 1: ANÁLISIS INDIVIDUAL COMPLETO ---
 with tab1:
@@ -746,7 +690,6 @@ with tab1:
                 pos = stats_jugador['Posición']
 
                 st.divider()
-                
                 estatus = stats_jugador['Estatus_Medico']
                 fatiga_entreno = stats_jugador['Fatiga_Entreno']
                 ansiedad = stats_jugador['Ansiedad_Competitiva']
@@ -758,7 +701,6 @@ with tab1:
                 col_title, col_semaforo = st.columns([2, 1])
                 with col_title:
                     st.header(f"Análisis: {jugador_filtro} - #{stats_jugador['Jersey']} ({pos})")
-                
                 with col_semaforo:
                     if estatus == "Lesionado / Inactivo" or indice_riesgo >= 7.0:
                         st.error(f"RIESGO ALTO (Índice: {indice_riesgo:.1f}/10)")
@@ -770,7 +712,6 @@ with tab1:
                 entrenos_tot = max(int(stats_jugador['Entrenos_Programados']), 1)
                 entrenos_asist = int(stats_jugador['Entrenos_Asistidos'])
                 pct_entrenos = min(100.0, (entrenos_asist / entrenos_tot) * 100)
-
                 partidos_tot = max(int(stats_jugador['Partidos_Programados']), 1)
                 partidos_jugados = int(stats_jugador['Partidos_Convocados'])
                 pct_partidos = min(100.0, (partidos_jugados / partidos_tot) * 100)
@@ -783,73 +724,43 @@ with tab1:
 
                 st.subheader("📈 Métricas de Rendimiento")
                 col1, col2, col3 = st.columns(3)
-                
                 pj = stats_jugador['PJ_Calc']
-                pe = stats_jugador['PE_Calc']
 
                 if pos == 'QB':
                     intentos_tot = stats_jugador['Pases_Intentados_Partidos']
                     completados_tot = stats_jugador['Pases_Completados_Partidos']
                     pct_comp = (completados_tot / intentos_tot * 100) if intentos_tot > 0 else 0.0
-                    
-                    ypase_ppg = stats_jugador['Yardas_Pase_Partidos'] / pj
-                    yrush_ppg = stats_jugador['Yardas_Acarreo_Partidos'] / pj
-                    
-                    with col1: st.metric("Passing Yards / Partido (PPG)", f"{ypase_ppg:.1f} yds")
-                    with col2: st.metric("Rushing Yards / Partido (PPG)", f"{yrush_ppg:.1f} yds")
-                    with col3: st.metric("Efectividad Pases (Comp %)", f"{pct_comp:.1f}%", f"{completados_tot}/{intentos_tot}")
-
+                    with col1: st.metric("Passing Yards / Partido", f"{stats_jugador['Yardas_Pase_Partidos']/pj:.1f} yds")
+                    with col2: st.metric("Rushing Yards / Partido", f"{stats_jugador['Yardas_Acarreo_Partidos']/pj:.1f} yds")
+                    with col3: st.metric("Efectividad Pases", f"{pct_comp:.1f}%")
                 elif pos == 'RB':
-                    yrush_ppg = stats_jugador['Yardas_Acarreo_Partidos'] / pj
-                    fumbles_tot = stats_jugador['Fumbles_Partidos'] + stats_jugador['Fumbles_Entrenos']
-                    with col1: st.metric("Rushing Yards / Partido (PPG)", f"{yrush_ppg:.1f} yds")
-                    with col2: st.metric("Fumbles Totales", int(fumbles_tot))
-                    with col3: st.metric("Total Rushing Yards Globales", int(stats_jugador['Yardas_Acarreo_Partidos'] + stats_jugador['Yardas_Acarreo_Entrenos']))
-
+                    with col1: st.metric("Rushing Yards / Partido", f"{stats_jugador['Yardas_Acarreo_Partidos']/pj:.1f} yds")
+                    with col2: st.metric("Fumbles Totales", int(stats_jugador['Fumbles_Partidos'] + stats_jugador['Fumbles_Entrenos']))
+                    with col3: st.metric("Total Rushing Yards", int(stats_jugador['Yardas_Acarreo_Partidos'] + stats_jugador['Yardas_Acarreo_Entrenos']))
                 elif pos == 'WR':
-                    yrec_ppg = stats_jugador['Yardas_Pase_Partidos'] / pj
-                    drops_tot = stats_jugador['Drops_Partidos'] + stats_jugador['Drops_Entrenos']
-                    with col1: st.metric("Receiving Yards / Partido (PPG)", f"{yrec_ppg:.1f} yds")
-                    with col2: st.metric("Drops Totales", int(drops_tot))
+                    with col1: st.metric("Receiving Yards / Partido", f"{stats_jugador['Yardas_Pase_Partidos']/pj:.1f} yds")
+                    with col2: st.metric("Drops Totales", int(stats_jugador['Drops_Partidos'] + stats_jugador['Drops_Entrenos']))
                     with col3: st.metric("Total Receiving Yards", int(stats_jugador['Yardas_Pase_Partidos'] + stats_jugador['Yardas_Pase_Entrenos']))
-                
                 elif pos == 'OL':
-                    bloqueos_ppg = stats_jugador['Bloqueos_Dominio_Partidos'] / pj
-                    bloqueos_ent = stats_jugador['Bloqueos_Dominio_Entrenos']
-                    total_bloqueos = stats_jugador['Bloqueos_Dominio_Partidos'] + bloqueos_ent
-                    with col1: st.metric("PPG (Bloqueos / Partido)", f"{bloqueos_ppg:.1f}")
-                    with col2: st.metric("Bloqueos Prácticas", int(bloqueos_ent))
+                    with col1: st.metric("Bloqueos / Partido", f"{stats_jugador['Bloqueos_Dominio_Partidos']/pj:.1f}")
+                    with col2: st.metric("Bloqueos Prácticas", int(stats_jugador['Bloqueos_Dominio_Entrenos']))
                     with col3: st.metric("Sacks Permitidos (Total)", int(stats_jugador['Capturas_Permitidas_Partidos'] + stats_jugador['Capturas_Permitidas_Entrenos']))
-                
                 elif pos in ['DL', 'LB']:
-                    tackleadas_ppg = stats_jugador['Tackleadas_Efectivas_Partidos'] / pj
-                    pbus_tot = stats_jugador['Pases_Desviados_Partidos'] + stats_jugador['Pases_Desviados_Entrenos']
-                    sacks_tot = stats_jugador['Capturas_QB_Sacks_Partidos'] + stats_jugador['Capturas_QB_Sacks_Entrenos']
-                    with col1: st.metric("PPG (Tackleadas / Partido)", f"{tackleadas_ppg:.1f}")
-                    with col2: st.metric("Pases Desviados (PBU Total)", int(pbus_tot))
-                    with col3: st.metric("Total Sacks Defensivos", float(sacks_tot))
-                
+                    with col1: st.metric("Tackleadas / Partido", f"{stats_jugador['Tackleadas_Efectivas_Partidos']/pj:.1f}")
+                    with col2: st.metric("Pases Desviados (PBU)", int(stats_jugador['Pases_Desviados_Partidos'] + stats_jugador['Pases_Desviados_Entrenos']))
+                    with col3: st.metric("Total Sacks", float(stats_jugador['Capturas_QB_Sacks_Partidos'] + stats_jugador['Capturas_QB_Sacks_Entrenos']))
                 elif pos in ['DB', 'CB']:
-                    intercepciones_ppg = stats_jugador['Intercepciones_Partidos'] / pj
-                    pbus_tot = stats_jugador['Pases_Desviados_Partidos'] + stats_jugador['Pases_Desviados_Entrenos']
-                    tackleadas_ppg = stats_jugador['Tackleadas_Efectivas_Partidos'] / pj
-                    with col1: st.metric("PPG (Intercepciones / P.)", f"{intercepciones_ppg:.2f}")
-                    with col2: st.metric("Pases Desviados (PBU Total)", int(pbus_tot))
+                    with col1: st.metric("Intercepciones / Partido", f"{stats_jugador['Intercepciones_Partidos']/pj:.2f}")
+                    with col2: st.metric("Pases Desviados (PBU)", int(stats_jugador['Pases_Desviados_Partidos'] + stats_jugador['Pases_Desviados_Entrenos']))
                     with col3: st.metric("Total Intercepciones", int(stats_jugador['Intercepciones_Partidos'] + stats_jugador['Intercepciones_Entrenos']))
-                
                 elif pos == 'K':
-                    goles_campo = stats_jugador['Goles_Campo_Partidos']
-                    puntos_extra = stats_jugador['Puntos_Extra_Partidos']
-                    puntos_totales = (goles_campo * 3) + puntos_extra
-                    ppg_puntos = puntos_totales / pj
-                    with col1: st.metric("PPG (Puntos / Partido)", f"{ppg_puntos:.1f} pts")
-                    with col2: st.metric("Goles de Campo (Total)", int(goles_campo))
-                    with col3: st.metric("Puntos Extra (Total)", int(puntos_extra))
+                    puntos_totales = (stats_jugador['Goles_Campo_Partidos'] * 3) + stats_jugador['Puntos_Extra_Partidos']
+                    with col1: st.metric("Puntos / Partido", f"{puntos_totales/pj:.1f} pts")
+                    with col2: st.metric("Goles de Campo", int(stats_jugador['Goles_Campo_Partidos']))
+                    with col3: st.metric("Puntos Extra", int(stats_jugador['Puntos_Extra_Partidos']))
 
                 st.divider()
-
                 st.subheader("📊 Historial Comparativo: Partidos vs. Entrenamientos")
-                
                 tab_ind_partido, tab_ind_entreno = st.tabs(["🏟️ Datos y Gráficas de Partidos", "🏋️ Datos y Gráficas de Entrenamientos"])
                 
                 with tab_ind_partido:
@@ -857,62 +768,39 @@ with tab1:
                     df_resumen_partido = pd.DataFrame({
                         'Métrica': ['Convocatorias', 'Yardas Pase / Rec', 'Yardas Rushing', 'Pases Intentados', 'Pases Completados', 'Bloqueos', 'Sacks Permitidos', 'Tackleadas', 'Sacks Defensivos', 'Intercepciones / PBU', 'Fumbles', 'Drops'],
                         'Valor Registrado': [
-                            int(stats_jugador['Partidos_Convocados']),
-                            float(stats_jugador['Yardas_Pase_Partidos']),
-                            float(stats_jugador['Yardas_Acarreo_Partidos']),
-                            int(stats_jugador['Pases_Intentados_Partidos']),
-                            int(stats_jugador['Pases_Completados_Partidos']),
-                            int(stats_jugador['Bloqueos_Dominio_Partidos']),
-                            int(stats_jugador['Capturas_Permitidas_Partidos']),
-                            int(stats_jugador['Tackleadas_Efectivas_Partidos']),
-                            float(stats_jugador['Capturas_QB_Sacks_Partidos']),
-                            int(stats_jugador['Intercepciones_Partidos'] + stats_jugador['Pases_Desviados_Partidos']),
-                            int(stats_jugador['Fumbles_Partidos']),
-                            int(stats_jugador['Drops_Partidos'])
+                            int(stats_jugador['Partidos_Convocados']), float(stats_jugador['Yardas_Pase_Partidos']), float(stats_jugador['Yardas_Acarreo_Partidos']),
+                            int(stats_jugador['Pases_Intentados_Partidos']), int(stats_jugador['Pases_Completados_Partidos']), int(stats_jugador['Bloqueos_Dominio_Partidos']),
+                            int(stats_jugador['Capturas_Permitidas_Partidos']), int(stats_jugador['Tackleadas_Efectivas_Partidos']), float(stats_jugador['Capturas_QB_Sacks_Partidos']),
+                            int(stats_jugador['Intercepciones_Partidos'] + stats_jugador['Pases_Desviados_Partidos']), int(stats_jugador['Fumbles_Partidos']), int(stats_jugador['Drops_Partidos'])
                         ]
                     })
                     st.dataframe(df_resumen_partido, use_container_width=True, hide_index=True)
-                    
                     st.write("Evolución de Impacto en Partidos:")
-                    df_tendencia_juego = pd.DataFrame({'Impacto Partidos': stats_jugador['Historial_Rendimiento_Juego']})
-                    st.line_chart(df_tendencia_juego)
+                    st.line_chart(pd.DataFrame({'Impacto Partidos': stats_jugador['Historial_Rendimiento_Juego']}))
 
                 with tab_ind_entreno:
                     st.markdown("##### Resumen Estadístico en Entrenamientos Semanales")
                     df_resumen_entreno = pd.DataFrame({
                         'Métrica': ['Sesiones Asistidas', 'Yardas Pase / Rec (Práctica)', 'Yardas Rushing (Práctica)', 'Pases Intentados (Práctica)', 'Pases Completados (Práctica)', 'Bloqueos (Práctica)', 'Sacks Permitidos (Práctica)', 'Tackleadas (Práctica)', 'Sacks Defensivos (Práctica)', 'Intercepciones / PBU (Práctica)', 'Fumbles (Práctica)', 'Drops (Práctica)'],
                         'Valor Registrado': [
-                            int(stats_jugador['Entrenos_Asistidos']),
-                            float(stats_jugador['Yardas_Pase_Entrenos']),
-                            float(stats_jugador['Yardas_Acarreo_Entrenos']),
-                            int(stats_jugador['Pases_Intentados_Entrenos']),
-                            int(stats_jugador['Pases_Completados_Entrenos']),
-                            int(stats_jugador['Bloqueos_Dominio_Entrenos']),
-                            int(stats_jugador['Capturas_Permitidas_Entrenos']),
-                            int(stats_jugador['Tackleadas_Efectivas_Entrenos']),
-                            float(stats_jugador['Capturas_QB_Sacks_Entrenos']),
-                            int(stats_jugador['Intercepciones_Entrenos'] + stats_jugador['Pases_Desviados_Entrenos']),
-                            int(stats_jugador['Fumbles_Entrenos']),
-                            int(stats_jugador['Drops_Entrenos'])
+                            int(stats_jugador['Entrenos_Asistidos']), float(stats_jugador['Yardas_Pase_Entrenos']), float(stats_jugador['Yardas_Acarreo_Entrenos']),
+                            int(stats_jugador['Pases_Intentados_Entrenos']), int(stats_jugador['Pases_Completados_Entrenos']), int(stats_jugador['Bloqueos_Dominio_Entrenos']),
+                            int(stats_jugador['Capturas_Permitidas_Entrenos']), int(stats_jugador['Tackleadas_Efectivas_Entrenos']), float(stats_jugador['Capturas_QB_Sacks_Entrenos']),
+                            int(stats_jugador['Intercepciones_Entrenos'] + stats_jugador['Pases_Desviados_Entrenos']), int(stats_jugador['Fumbles_Entrenos']), int(stats_jugador['Drops_Entrenos'])
                         ]
                     })
                     st.dataframe(df_resumen_entreno, use_container_width=True, hide_index=True)
-                    
                     st.write("Tendencia de Fatiga Física en Entrenamientos:")
-                    df_tendencia_fatiga = pd.DataFrame({'Fatiga Acumulada': stats_jugador['Historial_Fatiga']})
-                    st.line_chart(df_tendencia_fatiga)
+                    st.line_chart(pd.DataFrame({'Fatiga Acumulada': stats_jugador['Historial_Fatiga']}))
 
                 st.divider()
-
                 st.subheader("Perfil Psicodeportivo Especializado")
-                
                 col_psi1, col_psi2 = st.columns(2)
                 with col_psi1:
                     st.markdown("#### Mitad de Semana (Entrenamientos)")
                     st.metric("Fatiga Física Acumulada", f"{stats_jugador['Fatiga_Entreno']}/10")
                     st.metric("Dolor / Molestias Físicas", f"{stats_jugador['Dolor_Muscular']}/10")
                     st.metric("Recuperación / Frescura", f"{stats_jugador['Recuperacion_Entreno']}/10")
-                
                 with col_psi2:
                     st.markdown("#### Pre-partido (Matchday)")
                     st.metric("Ansiedad / Activación", f"{stats_jugador['Ansiedad_Competitiva']}/10")
