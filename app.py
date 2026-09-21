@@ -31,7 +31,7 @@ if not check_password():
 # ==========================================
 st.title("Panel de Control: Rendimiento y Bienestar - Pumas CU")
 
-# Roster Base por si la nube está vacía
+# 1. Base de datos con el Roster Completo Precargado
 roster_data = [
     (0, "Jioshi Alexander Morrison González", "DL"),
     (1, "Raúl Rodrigo Blanco Ruiz", "WR"),
@@ -160,13 +160,12 @@ datos_iniciales = {
     'Historial_Rendimiento_Juego': [[0.0]]*n_jugadores
 }
 
-# --- CONEXIÓN Y CARGA DESDE GOOGLE SHEETS ---
+# --- CARGA SEGURA DESDE GOOGLE SHEETS CON RESPALDO LOCAL ---
 if 'df' not in st.session_state:
     try:
         conn = st.connection("gsheets", type="gsheets")
         df_cloud = conn.read(worksheet="Sheet1", ttl=0)
-        if not df_cloud.empty and 'Jugador' in df_cloud.columns:
-            # Limpiar listas internas si vienen como texto de la nube
+        if df_cloud is not None and not df_cloud.empty and 'Jugador' in df_cloud.columns:
             st.session_state.df = df_cloud
         else:
             st.session_state.df = pd.DataFrame(datos_iniciales)
@@ -664,7 +663,7 @@ with tab3:
                 'Capturas_QB_Sacks_Entrenos': 'SACKS (Práctica)', 'Intercepciones_Entrenos': 'INT (Práctica)', 'Pases_Desviados_Entrenos': 'PBU (Práctica)'
             })
             box_def_ent_edit = st.data_editor(box_defense_ent, use_container_width=True, hide_index=True, key="box_def_ent_edit")
-            if not box_def_ent_edit.equals(box_defense_ent):
+            if not box_def_ent_edit.equals(box_def_ent_edit):
                 st.success("Box score actualizado.")
 
 # --- PESTAÑA 1: ANÁLISIS INDIVIDUAL COMPLETO ---
